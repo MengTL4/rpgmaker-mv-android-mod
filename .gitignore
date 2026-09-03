@@ -1,0 +1,35 @@
+# ===== 游戏版权内容（切勿提交）=====
+# 原版游戏 APK / 构建出的 MOD APK（含 .idsig）
+*.apk
+*.idsig
+
+# apktool 反编译产物（解码出的游戏本体）
+*/decode/
+
+# 资源解密与结构分析产物
+PlayAgain/decrypt/
+PlayAgain/extract/
+PlayAgain/original-dex/
+PlayAgain/www-encrypted-backup/
+
+# 私有数据 / 存档备份
+PlayAgain/backup-save/
+PlayAgain/backup-tablet-save/
+PlayAgain2/original-data-backup/
+
+# ===== 构建输出 =====
+*/build/
+
+# ===== Android SDK（Google 许可限制再分发，用 tools/setup-sdk.sh 自行获取）=====
+tools/sdk/
+tools/platform-*.zip
+tools/build-tools-*.zip
+
+# ===== 内部工作目录 =====
+.agent/
+
+# ===== 杂项 =====
+node_modules/
+__pycache__/
+*.pyc
+shot.png
