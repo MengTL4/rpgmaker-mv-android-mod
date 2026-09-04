@@ -11,9 +11,9 @@
 ## 重打包必须处理的两件事（踩坑记录 2026-09-04）
 
 1. **登录门**：`patches/` 里 `Config.smali` 把 `Single_Game` 改 `false`，跳过 TapTap 链直接 `createWebsite()`。**丢失此补丁的后果**：MuMu 上 TapTap 未登录 → 启动 1 秒内静默退出（无 crash 日志，进程自杀）；平板上因 TapTap 已登录而不暴露
-2. **资源解密**：重打包后改走明文 index.html，不能依赖壳的运行时解密。build.sh 检测到加密布局（有 `jfm_data` 无 `js/`）时，自动换入 `decode/assets/www/{js,data}`（解密缓存），并删除 `jfm_data/qingyi`；缓存缺失则报错拒绝构建
+2. **资源解密**：重打包后改走明文 index.html，不能依赖壳的运行时解密。build.sh 检测到加密布局（有 `jfm_data` 无 `js/`）时，**自动由 `tools/decrypt/decrypt.js` 解码** `jfm_data→js/`、`qingyi→data/`（按 `tools/decrypt/resource-map.json` 的 digest→路径清单命名），并删除 `jfm_data/qingyi`，不再依赖本地 `decode/` 缓存。
 
-解密管线（一次性研究产物，不入库，见 `decrypt/`）：`jfm_data` 文件名 = sha256(URL)，AES 解密得明文 JS；`qingyi` 同理得 `data/*.json`。产物已沉淀在 `decode/assets/www/`，游戏换版本时需重跑一次并同步更新 `patches/` 的 smali diff。
+   解密算法（已验证可从原版 apk 单独复现，无需运行时抓取）：`jfm_data`/`qingyi` 文件名 = sha256(URL)；`key = digest[48:64]` 逐字节 ^ `0xb6`，`iv = digest[0:16]`，AES-128-GCM，authTag = 密文末尾 16 字节。`resource-map.json`（仅字符串路径，可入库）由 `tools/decrypt/gen-map.js` 从"apk 密文 + 正确命名的 decode/www"生成；**换游戏版本需重跑 `gen-map.js` 重新生成清单**并同步更新 `patches/` 的 smali diff。构建需 `node`（仅 stdlib，无 npm 依赖）。
 
 ## 目录内容
 
@@ -26,7 +26,8 @@
 | `mod/java/` | 原生 Java：`ModHub`(上下文)、`ModFloatingWindow`(悬浮球)、`ModBridge`(JS 桥) |
 | `mod/www/mod/` | `rmmod.js`（Vue3 + Naive UI 面板）+ `vendor/`（本地 vue/naive-ui，无网络依赖） |
 | `build/` | 产物 `PlayAgain-mod.apk`（不入库） |
-| `decrypt/` `extract/` `original-dex/` | 资源解密管线与结构分析产物（一次性研究用，不入库；解密结果已沉淀到 `decode/assets/www/`） |
+| `tools/decrypt/` | 自动解码：`decrypt.js`（构建时 jfm_data/qingyi→js/data）+ `gen-map.js`（生成 digest→路径清单）+ `resource-map.json`（清单，可入库）。构建仅需 node stdlib |
+| `decrypt/` `extract/` `original-dex/` | 早期逆向/结构分析产物（一次性研究用，不入库；密码算法已沉淀进 `tools/decrypt/` 与 README） |
 | `backup-save/` `backup-tablet-save/` | 手机/平板测试存档备份（不入库） |
 
 ## 架构（混合方案：原生球 + WebView 面板）

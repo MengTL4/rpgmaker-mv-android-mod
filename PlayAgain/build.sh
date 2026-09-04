@@ -26,6 +26,7 @@ w() { cygpath -m "$1"; }   # Windows 原生工具(java/python)需要混合路径
 [ -d "$MODSRC/www" ]  || { echo "错误: 缺少 $MODSRC/www"; exit 1; }
 [ -d "$MODSRC/java" ] || { echo "错误: 缺少 $MODSRC/java"; exit 1; }
 [ -f "$SDK" ]       || { echo "错误: 缺少 $SDK（运行 tools/setup-sdk.sh 获取）"; exit 1; }
+command -v node >/dev/null 2>&1 || { echo "错误: 需要 node（用于资源自动解密，Node stdlib 即可，无 npm 依赖）"; exit 1; }
 
 echo "[1/7] 校验原版 APK ..."
 MD5="$(md5sum "$ORIG" | cut -d' ' -f1)"
@@ -42,20 +43,15 @@ mkdir -p "$OUT"; rm -rf "$STAGE"
 java -Xmx4g -jar tools/apktool.jar d -f "$(w "$ORIG")" -o "$(w "$STAGE")" 2>&1 | tail -1
 
 echo "[3/7] 应用补丁（manifest/smali/index.html + mod 网页层）..."
-# 原版资源是加密布局（www/jfm_data = JS、www/qingyi = 游戏数据，由壳内 X5WebViewClient
-# 按需解密）。重打包后改走明文 index.html，必须换上解密产物，否则游戏脚本全部 404。
-# 解密产物由一次性解密管线生成，缓存在 decode/assets/www/{js,data}（见 PlayAgain/README）。
+# 原版资源是加密布局（www/jfm_data = JS、www/qingyi = 游戏数据，由壳内 X5WebViewClient 按需解密）。
+# 重打包后改走明文 index.html，必须换成明文 js/data，否则游戏脚本全部 404。
+# 现在由 tools/decrypt/decrypt.js 自动解码（digest→路径清单 resource-map.json，仅字符串可入库），
+# 不再依赖本地 decode 缓存。换游戏版本需重跑 tools/decrypt/gen-map.js 重新生成清单。
 if [ -d "$STAGE/assets/www/jfm_data" ] && [ ! -d "$STAGE/assets/www/js" ]; then
-    DEC_SRC="$GAME_DIR/decode/assets/www"
-    if [ ! -d "$DEC_SRC/js" ] || [ ! -d "$DEC_SRC/data" ]; then
-        echo "错误: 原版资源为加密布局（jfm_data/qingyi），但缺少解密产物缓存。"
-        echo "      需要先跑一次资源解密管线，把明文 js/ 与 data/ 放入 $DEC_SRC（见 PlayAgain/README「资源解密」）。"
-        exit 1
-    fi
+    echo "检测到原版加密资源布局（jfm_data/qingyi），自动解密..."
+    node "$GAME_DIR/tools/decrypt/decrypt.js" "$(w "$STAGE/assets/www")" "$GAME_DIR/tools/decrypt/resource-map.json" \
+        || { echo "错误: 资源自动解密失败（需 node + tools/decrypt/resource-map.json）"; exit 1; }
     rm -rf "$STAGE/assets/www/jfm_data" "$STAGE/assets/www/qingyi"
-    cp -r "$DEC_SRC/js"   "$STAGE/assets/www/js"
-    cp -r "$DEC_SRC/data" "$STAGE/assets/www/data"
-    echo "      已换入解密资源（js + data，替换 jfm_data/qingyi）"
 fi
 cp -r "$PATCHES/." "$STAGE/"
 cp -r "$MODSRC/www/." "$STAGE/assets/www/"
