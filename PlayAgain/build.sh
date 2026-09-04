@@ -42,8 +42,36 @@ mkdir -p "$OUT"; rm -rf "$STAGE"
 java -Xmx4g -jar tools/apktool.jar d -f "$(w "$ORIG")" -o "$(w "$STAGE")" 2>&1 | tail -1
 
 echo "[3/7] 应用补丁（manifest/smali/index.html + mod 网页层）..."
+# 原版资源是加密布局（www/jfm_data = JS、www/qingyi = 游戏数据，由壳内 X5WebViewClient
+# 按需解密）。重打包后改走明文 index.html，必须换上解密产物，否则游戏脚本全部 404。
+# 解密产物由一次性解密管线生成，缓存在 decode/assets/www/{js,data}（见 PlayAgain/README）。
+if [ -d "$STAGE/assets/www/jfm_data" ] && [ ! -d "$STAGE/assets/www/js" ]; then
+    DEC_SRC="$GAME_DIR/decode/assets/www"
+    if [ ! -d "$DEC_SRC/js" ] || [ ! -d "$DEC_SRC/data" ]; then
+        echo "错误: 原版资源为加密布局（jfm_data/qingyi），但缺少解密产物缓存。"
+        echo "      需要先跑一次资源解密管线，把明文 js/ 与 data/ 放入 $DEC_SRC（见 PlayAgain/README「资源解密」）。"
+        exit 1
+    fi
+    rm -rf "$STAGE/assets/www/jfm_data" "$STAGE/assets/www/qingyi"
+    cp -r "$DEC_SRC/js"   "$STAGE/assets/www/js"
+    cp -r "$DEC_SRC/data" "$STAGE/assets/www/data"
+    echo "      已换入解密资源（js + data，替换 jfm_data/qingyi）"
+fi
 cp -r "$PATCHES/." "$STAGE/"
 cp -r "$MODSRC/www/." "$STAGE/assets/www/"
+
+# [3.5/7] 外围 SDK 剥离：目录覆盖表达不了删除，按清单 prune（smali 树 / so / assets / 孤儿类）。
+# 清单维护原则（先断引用后删树、grep 零引用复查）见 patches/strip-sdk.txt 头注释与 patches/README.md。
+if [ -f "$PATCHES/strip-sdk.txt" ]; then
+    echo "[3.5/7] 剥离外围 SDK（strip-sdk.txt）..."
+    while IFS= read -r line; do
+        case "$line" in ''|\#*) continue;; esac
+        for p in $STAGE/$line; do
+            [ -e "$p" ] || continue
+            rm -rf "$p"
+        done
+    done < "$PATCHES/strip-sdk.txt"
+fi
 
 echo "[4/7] 编译 mod Java -> dex ..."
 CLASSES="$OUT/classes"; DEX="$OUT/dex"

@@ -2,9 +2,18 @@
 
 ## 游戏信息
 
-- 包名 `com.hjgzs.zsyb`，RPG Maker MV 引擎 + 360(qihoo) 加固壳，入口 Activity `com.qihoo.rpgplugin.MainActivity`
-- 游戏逻辑全部在 `assets/www`（index.html + js/ + img/）；图片/音频 `.rpgmvp/.rpgmvo` XOR 加密，密钥 `a7f1bbc90496ca91cfd4c4fd6a33d161`
-- 测试设备：OPD2404 平板，2120x3000 @420dpi（游戏横屏渲染，截图为 3000x2120 横版）
+- 包名 `com.hjgzs.zsyb`，RPG Maker MV/MZ 混合引擎 + qihoo 风格插件壳（非真加固，dex 明文），入口 Activity `com.qihoo.rpgplugin.MainActivity`
+- 游戏逻辑全部在 `assets/www`；图片/音频 `.rpgmvp/.rpgmvo` XOR 加密（引擎自解），密钥 `a7f1bbc90496ca91cfd4c4fd6a33d161`
+- **脚本与数据加密**：`www/jfm_data/<sha256(路径)>`（全部 JS 模块，含入口 `index.html` 引用的 `.mjs`）与 `www/qingyi/<sha256>`（226 个 data/*.json），由壳内 `X5WebView$1`（WebViewClient）拦截请求按需解密
+- **登录门**：`Config.Single_Game=true` 时 MainActivity 走 TapTap 全链（`TapLoginHelper.init` → 登录监听 → 防沉迷 → 登录检查，失败 `finish()`）；模拟器 / TapTap 未登录设备上表现为启动即闪退
+- 测试设备：OPD2404 平板（2120x3000 @420dpi）、MuMu 模拟器（Android 15 x86_64）
+
+## 重打包必须处理的两件事（踩坑记录 2026-09-04）
+
+1. **登录门**：`patches/` 里 `Config.smali` 把 `Single_Game` 改 `false`，跳过 TapTap 链直接 `createWebsite()`。**丢失此补丁的后果**：MuMu 上 TapTap 未登录 → 启动 1 秒内静默退出（无 crash 日志，进程自杀）；平板上因 TapTap 已登录而不暴露
+2. **资源解密**：重打包后改走明文 index.html，不能依赖壳的运行时解密。build.sh 检测到加密布局（有 `jfm_data` 无 `js/`）时，自动换入 `decode/assets/www/{js,data}`（解密缓存），并删除 `jfm_data/qingyi`；缓存缺失则报错拒绝构建
+
+解密管线（一次性研究产物，不入库，见 `decrypt/`）：`jfm_data` 文件名 = sha256(URL)，AES 解密得明文 JS；`qingyi` 同理得 `data/*.json`。产物已沉淀在 `decode/assets/www/`，游戏换版本时需重跑一次并同步更新 `patches/` 的 smali diff。
 
 ## 目录内容
 
@@ -13,11 +22,11 @@
 | `game.apk` | 原版包（补丁基线，md5 `4563cf23...`，v5.2.5；不入库） |
 | `build.sh` | 一键构建：原版 APK → 成品，全自动 |
 | `patches/` | 补丁覆盖层（manifest / 入口 smali / index.html），逐项说明见其内 README |
-| `decode/` | apktool 反编译产物（已打补丁，调试/查阅用；一键构建不依赖它，不入库） |
+| `decode/` | apktool 反编译产物（已打补丁 + 解密资源缓存 `assets/www/{js,data}`；一键构建依赖其解密缓存，不入库） |
 | `mod/java/` | 原生 Java：`ModHub`(上下文)、`ModFloatingWindow`(悬浮球)、`ModBridge`(JS 桥) |
 | `mod/www/mod/` | `rmmod.js`（Vue3 + Naive UI 面板）+ `vendor/`（本地 vue/naive-ui，无网络依赖） |
 | `build/` | 产物 `PlayAgain-mod.apk`（不入库） |
-| `decrypt/` `extract/` `original-dex/` | 早期资源解密与结构分析产物（不入库） |
+| `decrypt/` `extract/` `original-dex/` | 资源解密管线与结构分析产物（一次性研究用，不入库；解密结果已沉淀到 `decode/assets/www/`） |
 | `backup-save/` `backup-tablet-save/` | 手机/平板测试存档备份（不入库） |
 
 ## 架构（混合方案：原生球 + WebView 面板）
@@ -73,3 +82,18 @@ python ../tools/debug/cdp_eval.py "任意 JS 表达式"
 ## 验收记录（2026-09-01，无线调试冒烟测试）
 
 悬浮球显示/位置记忆 → 点球开面板 → 标题无图标 → 分组开关与倍率滑条渲染 → 数据 tab 1152 条加载 + 滚动 + 图标 → 关面板球回收 → localStorage 持久化（17 项完整状态写回）—— **全部通过**。
+
+## 验收记录（2026-09-04，MuMu 闪退修复回归）
+
+- **根因**：9/4 重跑 build.sh 重建时，旧 decode 树里的两个关键处理没沉淀进 patches/ —— ① `Config.Single_Game=false`（跳过 TapTap 登录链）；② 解密资源 `www/{js,data}`。MuMu 上 TapTap 未登录 → 登录检查失败 `finish()` → 启动 1 秒闪退（无 crash 日志）；平板因 TapTap 已登录 + 旧构建而未暴露
+- **修复**：`Config.smali` 入 patches/；build.sh 增加解密资源换入步骤；两者均已文档化
+- **回归**：MuMu（pm clear 全新数据）：进标题画面 ✓ 悬浮球 ✓ 面板 v8 完整渲染 ✓；平板（install -r 保留存档）：进标题 ✓ 悬浮球位置记忆 ✓ 面板 ✓ —— **全部通过**
+
+## 验收记录（2026-09-04，外围 SDK 剥离）
+
+双设备（平板 + MuMu）安装 `build/PlayAgain-mod.apk`（md5 `64bde54e...`），冷启动 + CDP 运行时抽查：
+
+- **冷启动直达**：CDP 确认 `document.title=MOD_LOADED`、`scene=Scene_Title`（直达标题，无隐私弹窗/登录门）
+- **奖励直发**：`window.showRewardAd` 运行时为**直发补丁**（`TorchMapMapper.put` + `setTimeout` 直接触发回调）——"看广告换奖励"点了即发
+- **logcat**：无 `NoClassDefFoundError`/`VerifyError`/SDK 报错；进程存活
+- **已知限制**：游戏模式拦截 adb 触摸注入，"看广告换奖励 / 悬浮球+面板"的字面点击需真实手指（自动化到运行时链路为止）

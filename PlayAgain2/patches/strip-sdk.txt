@@ -1,0 +1,124 @@
+# PlayAgain2（zseb, gen2）外围 SDK 剥离清单 —— 由 build.sh [3.5/7] 阶段逐行删除。
+# 约定：空行 / # 注释跳过；相对 decode 根的路径；目录行整目录删除；文件名行可带 shell glob。
+# 保留：游戏本身、com/hjgzs/rpgplugin 壳（MainActivity/I/I$o/R*/X5WebView*）、ce/ 功能类
+#       （ce/a0,ac,af,b0,bb,bc,bd,be,ca,cb,ce,d0,e0,p,q,u1+u1$*）、X5(smtt/tencent)、
+#       kotlin/kotlinx/okhttp3/okio、glide(bumptech)、a1..z1/classes3 短名、androidx。
+# tools/surgery/strip_sdk.py + patch_eq.py 已把依赖被删包的 KEEP 侧代码等价替换/桩化。
+
+# ---- dex1 (smali/)：Ads / 登录SDK（核心包，obfuscated 内部在短名目录，不作删除以免误伤 kotlin/androidx）----
+smali/com/alex
+smali/com/anythink
+smali/com/baidu
+smali/com/bykv
+smali/com/byted
+smali/com/bytedance
+smali/ad
+
+# ---- 游戏壳 rpgplugin：TapTap 登录/防沉迷/动态/云存档 类簇 ----
+smali_classes2/com/hjgzs/rpgplugin/l*.smali
+smali_classes2/com/hjgzs/rpgplugin/o*.smali
+smali_classes2/com/hjgzs/rpgplugin/CloudSaveAdapter*.smali
+smali_classes2/com/hjgzs/rpgplugin/CloudSaveDialogFragment.smali
+smali_classes2/com/hjgzs/rpgplugin/MainActivity$l.smali
+
+# ---- ce/ 云存档/广告 胶水（其余 ce/ 功能类保留）----
+smali_classes2/ce/a.smali
+smali_classes2/ce/b.smali
+smali_classes2/ce/c.smali
+smali_classes2/ce/d.smali
+smali_classes2/ce/e.smali
+smali_classes2/ce/f.smali
+smali_classes2/ce/g.smali
+smali_classes2/ce/h.smali
+smali_classes2/ce/I.smali
+smali_classes2/ce/II.smali
+smali_classes2/ce/Il.smali
+smali_classes2/ce/j.smali
+smali_classes2/ce/k.smali
+smali_classes2/ce/lI.smali
+smali_classes2/ce/m.smali
+smali_classes2/ce/f1.smali
+smali_classes2/ce/n1.smali
+smali_classes2/ce/cc.smali
+smali_classes2/ce/cd.smali
+smali_classes2/ce/ae.smali
+smali_classes2/ce/bf.smali
+smali_classes2/ce/k1.smali
+smali_classes2/ce/l1.smali
+
+# ---- dex2 广告 SDK ----
+smali_classes2/com/bytedance
+smali_classes2/com/czhj/sdk
+smali_classes2/com/czhj/devicehelper
+smali_classes2/com/drakeet
+smali_classes2/com/flyjingfish
+smali_classes2/com/kuaishou
+smali_classes2/com/kwad
+smali_classes2/com/kwai
+smali_classes2/com/luck
+smali_classes2/com/qq
+smali_classes2/com/sigmob
+
+# ---- 隐私弹窗 / 合规 模块（Q3=冷启动直达游戏）----
+smali_classes2/cd
+smali_classes2/com/hjgzs/privacy
+
+# ---- dex3 登录/广告 SDK ----
+smali_classes3/com/taptap
+smali_classes3/com/tapsdk
+smali_classes3/com/ss
+smali_classes3/com/tapadn
+smali_classes3/com/sigmob
+smali_classes3/com/yxcorp
+smali_classes3/com/tan
+smali_classes3/q0
+
+# ---- n1 快手 weapon 抗作弊 簇（其余 n1/kotlin 保留）----
+smali_classes3/n1/ba.smali
+smali_classes3/n1/n0.smali
+smali_classes3/n1/n0$I.smali
+smali_classes3/n1/n0$Il.smali
+smali_classes3/n1/n0$Il$I.smali
+smali_classes3/n1/n0$Il$l.smali
+smali_classes3/n1/n0$Il$ll.smali
+smali_classes3/n1/n0$Il$o.smali
+smali_classes3/n1/n0$l.smali
+smali_classes3/n1/n0$lI.smali
+smali_classes3/n1/n0$ll.smali
+smali_classes3/n1/n0$o.smali
+smali_classes3/n1/v1.smali
+smali_classes3/n1/z.smali
+smali_classes3/n1/z0.smali
+
+# ---- dex4 TapTap 动态dex加载器 / BasePopup ----
+smali_classes4/e3
+smali_classes4/f3
+smali_classes4/razerdp
+
+# ---- R8 散射到保留短目录的 SDK UI/内部类（已确认无应用锚点引用，整目录删除）----
+smali_classes2/ba
+smali_classes2/bb
+smali_classes2/bd
+smali_classes2/bf
+smali_classes2/ce/b1.smali
+smali_classes2/ce/e1.smali
+smali_classes2/ce/h1.smali
+smali_classes2/ce/ll.smali
+smali_classes4/g3
+smali_classes4/i3
+smali_classes4/k3
+smali_classes4/m3
+
+# ---- 原生库（全部 SDK .so；游戏为 WebView 壳，无 app 自家 .so；MainActivity.J 的
+#      loadLibrary("msaoaidsec") 已桩化。整目录删除以免残留 x86/x86_64 库导致 arm64 设备报
+#      INSTALL_FAILED_NO_MATCHING_ABIS）----
+lib
+
+# ---- assets（SDK 插件/配置文件）----
+assets/1561739095
+assets/bdxadsdk.jar
+assets/gdt_plugin
+assets/ksad_common_encrypt_image.png
+assets/ksad_idc.json
+assets/supplierconfig.json
+assets/whiteList.json

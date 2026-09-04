@@ -7,6 +7,21 @@
 - 产物：`build/PlayAgain2-mod.apk`（classes5.dex 注入三件套 + assets 打补丁）
 - 复用一代的 `mod/java/`（ModHub/ModFloatingWindow/ModBridge）与 `mod/www/mod/`（rmmod.js + vendor），UI 与一代完全一致
 
+## 〇、2026-09：外围 SDK 剥离（免登录直达 + 奖励直发）
+
+本代直装包已**整体剥离不参与运行的外围 SDK**（TapTap 登录/云存档/防沉迷/游戏内悬浮菜单、TapTap 合规
+隐私弹窗、聚合广告 anythink/穿山甲/快手/sigmob/优量汇/百度等），只保留游戏本体、壳、X5 内核、MOD。
+决策与机制见 `docs/adr/0001`，补丁逐项与换版本步骤见 `patches/README.md`。
+
+- **冷启动直达游戏**：`MainActivity.z()` 改直接调 `V()`（showGameView），绕过 隐私弹窗(cd/a)→登录合规链，
+  再无"签名不匹配"toast / 登录失败闪退；`onResume` 的 `__modVShown` 守卫仍是兜底。
+- **奖励直发**：`onAdShow(II)` 替换 AnyThink 播放链，直接向游戏注入
+  `javascript:TK.TatuAdReward(1,type,itemId)`（沿用原 SDK 成功回调协议），"看广告换奖励"点了即发。
+- **剥离机制**：`patches/strip-sdk.txt`（删除清单）+ `tools/surgery/{strip_sdk,patch_eq,verify_refs}.py`
+  （方法级手术 + R8 合并等价替换 + 零引用复查）+ 重写的 `AndroidManifest.xml`（最小权限）。
+- **安装兼容**：整目录删除 `lib/`（游戏为 WebView 壳、无 app 自家 .so），任意 ABI 设备均可装
+  （此前残留 x86/x86_64 SDK 库会致 arm64 报 `INSTALL_FAILED_NO_MATCHING_ABIS`）。
+
 ## 一、资源加密与反篡改（本代核心难点）
 
 ### 资源管线
@@ -139,6 +154,20 @@ python tools/debug/cdp_eval.py "<js>" [port]   # port 省略时用 9222
 | MOD 球/面板 | ✅ 冷启动挂载（Game_* 类恢复）+ 开关面板/双 tab/作弊开关/倍率滑条全部正常 |
 | MOD 功能生效 | ✅ 无敌（扣血无效）、金币 10 倍（gainGold(50)→+500）实测通过；hook 打点已适配子类覆盖 |
 | TapSDK toast | ✅ 守门人 showErrorToast 已吞，启动与运行期均不再弹"包名、签名错误" |
+
+### 2026-09-04：外围 SDK 剥离验收（`800877ab74a9af03a5acff3365f459e6`）
+
+剥离后重跑（平板 OPD2404 + MuMu 各装新包，冷启动 + CDP 运行时抽查）：
+
+| 项 | 结果 |
+|---|---|
+| 双设备安装 | ✅ 平板(arm64) `Success`；MuMu(x86_64) `Success`（整删 `lib/` 后任意 ABI 可装） |
+| 冷启动直达 | ✅ 无需任何弹窗/登录，CDP 确认 `document.title=MOD_LOADED`、`scene=Scene_Map` |
+| MOD 挂载 | ✅ `window.rmmod`/mod DOM 根在位（rmmod.js 初始化） |
+| 奖励直发 | ✅ 游戏侧 `TK.TatuAdReward` 为活函数；原生 `onAdShow(II)` 直注入 `1,type,itemId` |
+| logcat | ✅ 无 `NoClassDefFoundError`/`VerifyError`/`ClassNotFound`/SDK 报错（仅系统 service bind 的 W 级告警，无碍） |
+| 云存档/本地存档 | ⚠️ TapTap 云存档已随 SDK 移除（stub），**本地存档走游戏自身 StorageMrg 不受影响**；云存档按钮不再报错（静默） |
+| 已知限制 | ⚠️ 游戏模式拦截 adb 触摸注入，"看广告换奖励 / MOD 面板开关"的字面点击需真实手指（自动化为运行时链路可证明，见上）；MuMu 模拟器 WebView 默认不暴露远程调试 socket，CDP 仅在平板抽查 |
 
 ## 十、目录结构
 

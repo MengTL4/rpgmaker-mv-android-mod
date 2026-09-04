@@ -1,25 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:compileSdkVersion="31" android:compileSdkVersionCodename="12" package="com.hjgzs.zsyb" platformBuildVersionCode="31" platformBuildVersionName="12">
+    <!-- RMMOD 2026-09-04: 外围 SDK（TapTap 登录/防沉迷、六家广告、OAID、LDSdk）整体剥离，
+         权限只留游戏运行必需项；SDK 的全部组件/meta-data 已删除，清单见 patches/strip-sdk.txt -->
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
-    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.GET_TASKS"/>
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
-    <uses-permission android:name="android.permission.REORDER_TASKS"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
-    <uses-permission android:name="com.hjgzs.zsyb.openadsdk.permission.TT_PANGOLIN"/>
-    <uses-permission android:name="com.asus.msa.SupplementaryDID.ACCESS"/>
-    <permission android:name="com.hjgzs.zsyb.openadsdk.permission.TT_PANGOLIN" android:protectionLevel="signature"/>
     <queries>
         <intent>
             <action android:name="android.intent.action.VIEW"/>
@@ -27,7 +16,6 @@
             <data android:scheme="https"/>
         </intent>
     </queries>
-    <uses-permission android:name="freemme.permission.msa"/>
     <application android:allowBackup="true" android:appComponentFactory="androidx.core.app.CoreComponentFactory" android:debuggable="true" android:icon="@mipmap/icon" android:keepScreenOn="true" android:label="@string/app_name" android:name="com.qihoo.rpgplugin.RmApplication" android:roundIcon="@mipmap/icon" android:supportsRtl="true" android:theme="@style/Theme.RPGPlugin" android:usesCleartextTraffic="true">
         <activity android:configChanges="keyboardHidden|orientation|uiMode|screenSize" android:exported="true" android:hardwareAccelerated="true" android:keepScreenOn="true" android:name="com.qihoo.rpgplugin.MainActivity" android:screenOrientation="sensorLandscape">
             <intent-filter>
@@ -36,111 +24,6 @@
             </intent-filter>
         </activity>
         <service android:name="com.qihoo.rpgplugin.service.GameService"/>
-        <activity android:name="com.qihoo.privacy.PrivacyActivity" android:screenOrientation="sensorLandscape"/>
-        <activity android:name="com.qihoo.privacy.ProtocolActivity" android:screenOrientation="sensorLandscape"/>
-        <service android:name="cn.leancloud.push.PushService"/>
-        <receiver android:exported="true" android:name="cn.leancloud.push.LCBroadcastReceiver">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-                <action android:name="android.intent.action.USER_PRESENT"/>
-                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
-            </intent-filter>
-        </receiver>
-        <activity android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize" android:exported="false" android:name="com.tds.common.oauth.TapTapEntryActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"/>
-        <activity android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize" android:exported="false" android:name="com.taptap.sdk.ui.TapTapActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"/>
-        <activity android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize" android:exported="false" android:name="com.taptap.sdk.TapLoginHelperActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"/>
         <uses-library android:name="org.apache.http.legacy" android:required="false"/>
-        <service android:exported="false" android:multiprocess="true" android:name="com.qq.e.comm.DownloadService"/>
-        <activity android:configChanges="keyboard|keyboardHidden|orientation|screenSize" android:multiprocess="true" android:name="com.qq.e.ads.ADActivity"/>
-        <activity android:configChanges="keyboard|keyboardHidden|orientation|screenSize" android:multiprocess="true" android:name="com.qq.e.ads.PortraitADActivity" android:screenOrientation="portrait" android:theme="@android:style/Theme.Light.NoTitleBar"/>
-        <provider android:authorities="com.hjgzs.zsyb.gdt.fileprovider" android:exported="false" android:grantUriPermissions="true" android:name="com.qq.e.comm.GDTFileProvider">
-            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/torch_file_paths"/>
-        </provider>
-        <provider android:authorities="com.hjgzs.zsyb.TTFileProvider" android:exported="false" android:grantUriPermissions="true" android:name="com.bytedance.sdk.openadsdk.TTFileProvider">
-            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/torch_file_paths"/>
-        </provider>
-        <provider android:authorities="com.hjgzs.zsyb.TTMultiProvider" android:exported="false" android:name="com.bytedance.sdk.openadsdk.multipro.TTMultiProvider"/>
-        <provider android:authorities="com.hjgzs.zsyb.MeishuFileProvider" android:exported="false" android:grantUriPermissions="true" android:name="com.meishu.sdk.core.service.MeishuFileProvider">
-            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/meishu_file_path"/>
-        </provider>
-        <activity android:configChanges="keyboard|keyboardHidden|orientation|screenSize" android:multiprocess="true" android:name="com.qq.e.ads.LandscapeADActivity" android:screenOrientation="sensorLandscape" android:theme="@android:style/Theme.Light.NoTitleBar"/>
-        <activity android:configChanges="keyboard|keyboardHidden|orientation|screenSize" android:multiprocess="true" android:name="com.qq.e.ads.RewardvideoPortraitADActivity" android:theme="@android:style/Theme.Light.NoTitleBar">
-            <meta-data android:name="android.notch_support" android:value="true"/>
-        </activity>
-        <activity android:configChanges="keyboard|keyboardHidden|orientation|screenSize" android:multiprocess="true" android:name="com.qq.e.ads.RewardvideoLandscapeADActivity" android:screenOrientation="landscape" android:theme="@android:style/Theme.Light.NoTitleBar">
-            <meta-data android:name="android.notch_support" android:value="true"/>
-        </activity>
-        <activity android:multiprocess="true" android:name="com.qq.e.ads.DialogActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"/>
-        <meta-data android:name="ZEUS_PLUGIN_PANGLE" android:value="{                 apiVersionCode:5004,                 packageName:com.byted.pangle,                 minPluginVersion:5004,                 internalPath:1422834508,                 internalVersionCode:5004             }"/>
-        <meta-data android:name="ZEUS_PLUGIN_com.byted.csj.ext" android:value="{apiVersionCode:999,packageName:com.byted.csj.ext,minPluginVersion:1000,maxPluginVersion:999999999,internalPath:'',internalVersionCode:-1, appKey:'',appSecretKey:''}"/>
-        <activity android:configChanges="keyboardHidden|navigation|orientation|screenSize" android:exported="false" android:launchMode="standard" android:name="com.bytedance.sdk.openadsdk.stub.activity.Stub_Standard_Activity" android:windowSoftInputMode="stateHidden|adjustResize"/>
-        <activity android:configChanges="keyboardHidden|navigation|orientation|screenSize" android:exported="false" android:launchMode="standard" android:name="com.bytedance.sdk.openadsdk.stub.activity.Stub_Standard_Portrait_Activity" android:screenOrientation="portrait" android:windowSoftInputMode="stateHidden|adjustResize"/>
-        <activity android:configChanges="keyboardHidden|navigation|orientation|screenSize" android:exported="false" android:launchMode="standard" android:name="com.bytedance.sdk.openadsdk.stub.activity.Stub_Standard_Activity_T" android:theme="@android:style/Theme.Translucent" android:windowSoftInputMode="stateHidden|adjustResize"/>
-        <activity android:configChanges="keyboardHidden|navigation|orientation|screenSize" android:exported="false" android:launchMode="standard" android:name="com.bytedance.sdk.openadsdk.stub.activity.Stub_Standard_Landscape_Activity" android:screenOrientation="landscape" android:windowSoftInputMode="stateHidden|adjustResize"/>
-        <activity android:configChanges="keyboardHidden|navigation|orientation|screenSize" android:exported="false" android:name="com.bytedance.sdk.openadsdk.stub.activity.Stub_Activity" android:windowSoftInputMode="stateHidden|adjustResize"/>
-        <activity android:configChanges="keyboardHidden|navigation|orientation|screenSize" android:exported="false" android:launchMode="singleTask" android:name="com.bytedance.sdk.openadsdk.stub.activity.Stub_SingleTask_Activity_T" android:theme="@android:style/Theme.Translucent" android:windowSoftInputMode="stateHidden|adjustResize"/>
-        <activity android:configChanges="keyboardHidden|navigation|orientation|screenSize" android:exported="false" android:launchMode="singleTask" android:name="com.bytedance.sdk.openadsdk.stub.activity.Stub_SingleTask_Activity" android:windowSoftInputMode="stateHidden|adjustResize"/>
-        <provider android:authorities="com.hjgzs.zsyb.pangle.servermanager.downloader.com.bytedance.sdk.openadsdk.adhost" android:exported="false" android:name="com.bytedance.sdk.openadsdk.stub.server.DownloaderServerManager" android:process=":downloader"/>
-        <provider android:authorities="com.hjgzs.zsyb.pangle.servermanager.main" android:exported="false" android:name="com.bytedance.sdk.openadsdk.stub.server.MainServerManager"/>
-        <provider android:authorities="com.hjgzs.zsyb.pangle.provider.proxy.main" android:exported="false" android:name="com.bytedance.pangle.provider.MainProcessProviderProxy"/>
-        <provider android:authorities="com.hjgzs.zsyb.pangle.fileprovider" android:exported="false" android:grantUriPermissions="true" android:name="com.bytedance.pangle.FileProvider"/>
-        <activity android:exported="false" android:name="com.ss.android.downloadlib.addownload.compliance.AppPrivacyPolicyActivity"/>
-        <activity android:exported="false" android:name="com.ss.android.downloadlib.addownload.compliance.AppDetailInfoActivity"/>
-        <activity android:exported="false" android:launchMode="singleTask" android:name="com.ss.android.downloadlib.activity.TTDelegateActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
-        <activity android:exported="false" android:launchMode="singleTask" android:name="com.ss.android.downloadlib.activity.JumpKllkActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
-        <receiver android:exported="false" android:name="com.ss.android.downloadlib.core.download.DownloadReceiver"/>
-        <service android:exported="false" android:name="com.ss.android.socialbase.appdownloader.DownloadHandlerService"/>
-        <activity android:exported="false" android:launchMode="singleTask" android:name="com.ss.android.socialbase.appdownloader.view.DownloadTaskDeleteActivity" android:theme="@android:style/Theme.Dialog"/>
-        <activity android:exported="false" android:launchMode="singleTask" android:name="com.ss.android.socialbase.appdownloader.view.JumpUnknownSourceActivity" android:theme="@android:style/Theme.Dialog"/>
-        <service android:enabled="true" android:exported="false" android:name="com.ss.android.socialbase.appdownloader.RetryJobSchedulerService" android:permission="android.permission.BIND_JOB_SERVICE"/>
-        <service android:exported="false" android:name="com.ss.android.socialbase.downloader.downloader.IndependentProcessDownloadService" android:process=":downloader">
-            <intent-filter>
-                <action android:name="com.ss.android.socialbase.downloader.remote"/>
-            </intent-filter>
-        </service>
-        <service android:exported="false" android:name="com.ss.android.socialbase.downloader.notification.DownloadNotificationService"/>
-        <service android:exported="false" android:name="com.ss.android.socialbase.downloader.downloader.DownloadService"/>
-        <service android:exported="false" android:name="com.ss.android.socialbase.downloader.impls.DownloadHandleService"/>
-        <service android:exported="false" android:name="com.ss.android.socialbase.downloader.downloader.SqlDownloadCacheService"/>
-        <meta-data android:name="ZEUS_PLUGIN_LIVE" android:value="{                 apiVersionCode:2050,                 packageName:com.byted.live.lite,                 minPluginVersion:205000,                 maxPluginVersion:209999,                 appKey:'9f64a31d9d0456d845733718c4c6934d',                 appSecretKey:'eb7fc60ac5ed4708e13d9c7f8e4096a7',                 isSupportLibIsolate:true,                 internalPath:'plugins/zeusliveplugin.apk',                 internalVersionCode:5  }"/>
-        <meta-data android:name="LIVE_API_VERSION_CODE" android:value="2050"/>
-        <activity android:configChanges="keyboardHidden|navigation|orientation|screenSize" android:exported="false" android:name="com.bytedance.android.openliveplugin.stub.activity.StubActivity$Activity" android:windowSoftInputMode="stateHidden|adjustResize"/>
-        <activity android:configChanges="keyboardHidden|navigation|orientation|screenSize" android:exported="false" android:name="com.bytedance.android.openliveplugin.stub.activity.StubActivity$AppCompat" android:windowSoftInputMode="stateHidden|adjustResize"/>
-        <activity android:configChanges="keyboardHidden|navigation|orientation|screenSize" android:exported="false" android:name="com.bytedance.android.openliveplugin.stub.activity.StubActivity$AppCompat_T" android:theme="@android:style/Theme.Translucent" android:windowSoftInputMode="stateHidden|adjustResize"/>
-        <activity android:configChanges="keyboardHidden|navigation|orientation|screenSize" android:exported="false" android:launchMode="singleTask" android:name="com.bytedance.android.openliveplugin.stub.activity.StubActivity$Activity_T_SingleTask1" android:theme="@android:style/Theme.Translucent" android:windowSoftInputMode="stateHidden|adjustResize"/>
-        <activity android:configChanges="keyboardHidden|navigation|orientation|screenSize" android:exported="false" android:launchMode="singleTop" android:name="com.bytedance.android.openliveplugin.stub.activity.StubActivity$AppCompat_T_SingleTop1" android:theme="@android:style/Theme.Translucent" android:windowSoftInputMode="stateHidden|adjustResize"/>
-        <activity android:configChanges="keyboardHidden|navigation|orientation|screenSize" android:exported="false" android:name="com.bytedance.android.openliveplugin.stub.activity.StubActivity$Activity_Behind" android:screenOrientation="behind" android:windowSoftInputMode="stateHidden|adjustResize"/>
-        <activity android:configChanges="keyboardHidden|navigation|orientation|screenSize" android:exported="false" android:name="com.bytedance.android.openliveplugin.stub.activity.StubActivity$Activity_T" android:theme="@android:style/Theme.Translucent" android:windowSoftInputMode="stateHidden|adjustResize"/>
-        <activity android:configChanges="keyboardHidden|navigation|orientation|screenSize" android:exported="false" android:name="com.bytedance.android.openliveplugin.stub.activity.StubActivity$AppCompat_Portrait" android:screenOrientation="portrait" android:windowSoftInputMode="stateHidden|adjustResize"/>
-        <activity android:configChanges="keyboardHidden|navigation|orientation|screenSize" android:exported="false" android:name="com.bytedance.android.openliveplugin.stub.activity.StubActivity$Activity_Portrait" android:screenOrientation="portrait" android:windowSoftInputMode="stateHidden|adjustResize"/>
-        <activity android:configChanges="orientation|screenSize" android:exported="false" android:name="com.bytedance.android.openliveplugin.stub.activity.Stub_Standard_Activity_DouyinWebAuthorizeActivity" android:screenOrientation="portrait" android:theme="@android:style/Theme.NoTitleBar.Fullscreen"/>
-        <activity android:exported="true" android:name="com.bytedance.android.openliveplugin.stub.activity.DouyinAuthorizeActivityProxy"/>
-        <activity android:configChanges="keyboardHidden|navigation|orientation|screenSize" android:exported="false" android:launchMode="singleTask" android:name="com.bytedance.android.openliveplugin.stub.activity.StubActivity$AppCompat_SingleTask2" android:screenOrientation="portrait" android:theme="@android:style/Theme.Light.NoTitleBar" android:windowSoftInputMode="stateHidden|adjustResize"/>
-        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="false" android:name="com.qihoo.ak.landingpage.LandingPage"/>
-        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="false" android:name="com.qihoo.ak.click.dialog.DownloadDialogActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
-        <provider android:authorities="com.hjgzs.zsyb.aksdkprovider" android:exported="false" android:grantUriPermissions="true" android:name="com.qihoo.ak.factory.provider.TorchProvider"/>
-        <provider android:authorities="com.hjgzs.zsyb.sigprovider" android:exported="false" android:grantUriPermissions="true" android:initOrder="200" android:name="com.sigmob.sdk.SigmobFileProvider">
-            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/sigmob_provider_paths"/>
-        </provider>
-        <activity android:configChanges="keyboard|keyboardHidden|orientation|screenSize" android:hardwareAccelerated="true" android:name="com.sigmob.sdk.base.common.TransparentAdActivity" android:theme="@style/sig_transparent_style"/>
-        <activity android:configChanges="keyboard|keyboardHidden|orientation|screenSize" android:hardwareAccelerated="true" android:name="com.sigmob.sdk.base.common.AdActivity" android:theme="@android:style/Theme.Light.NoTitleBar"/>
-        <meta-data android:name="com.google.android.actions" android:resource="@xml/ubixfile_paths"/>
-        <service android:name="com.ubix.ssp.open.comm.DownloadService"/>
-        <activity android:name="com.ubix.ssp.open.comm.AdActivity"/>
-        <provider android:authorities="com.hjgzs.zsyb.UBiXFileProvider" android:exported="false" android:grantUriPermissions="true" android:name="com.ubix.ssp.open.comm.UBiXFileProvider">
-            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/ubix_file_path"/>
-        </provider>
-        <activity android:name="com.ubix.ssp.open.comm.UBiXWebViewActivity" android:theme="@style/UbixSplash"/>
-        <activity android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize" android:hardwareAccelerated="true" android:name="com.ubix.ssp.open.comm.UBiXVideoActivity"/>
-        <provider android:authorities="com.hjgzs.zsyb.UbixDataContentProvider" android:enabled="true" android:exported="true" android:name="com.ubix.ssp.ad.core.monitor.data.UbixDataContentProvider"/>
-        <activity android:name="com.meishu.sdk.activity.GdtPrivacyActivity"/>
-        <activity android:exported="false" android:name="com.meishu.sdk.activity.MeishuDownloadDetailActivity" android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
-        <activity android:configChanges="orientation|screenSize" android:exported="false" android:launchMode="singleTop" android:name="com.meishu.sdk.activity.MeishuRewardVideoPlayerActivity" android:screenOrientation="behind" android:theme="@style/MeishuFullScreen"/>
-        <activity android:exported="false" android:name="com.meishu.sdk.activity.MeishuWebviewActivity" android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
-        <activity android:exported="false" android:name="com.meishu.sdk.core.webview.TaskCenterWebActivity" android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
-        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="false" android:name="com.meishu.sdk.meishu_ad.view.DownLoadDialogActivity" android:theme="@style/MyTranslucentTheme"/>
-        <activity android:exported="false" android:name="com.meishu.sdk.activity.MeishuAlertDialogActivity" android:theme="@style/MeishuDownloadDialog"/>
-        <activity android:configChanges="orientation|screenSize" android:exported="false" android:launchMode="singleTop" android:name="com.meishu.sdk.activity.MeishuDetailActivity" android:screenOrientation="portrait" android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
-        <provider android:authorities="com.hjgzs.zsyb.basepopup-trojan" android:exported="false" android:multiprocess="false" android:name="razerdp.basepopup.BasePopupRuntimeTrojanProvider"/>
     </application>
 </manifest>

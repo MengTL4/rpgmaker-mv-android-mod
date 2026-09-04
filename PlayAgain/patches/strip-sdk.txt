@@ -1,0 +1,61 @@
+# PlayAgain 外围 SDK 剥离清单（2026-09-04）
+# build.sh 在应用补丁后按行删除（rm -rf，支持 glob；路径相对 apktool 解码目录）。
+# 配套的"断调用"补丁见 patches/smali_classes2/ 各文件与 patches/README.md。
+# 原则：先断光 KEEP 侧引用，再删树；删完用 grep 复查零引用（见 patches/README.md「零引用复查」）。
+
+# --- TapTap 登录/防沉迷/SDK（含 shaded androidx/google 副本）---
+smali_classes2/com/tapsdk
+smali_classes2/com/taptap
+smali_classes2/com/tds
+smali_classes2/tds
+
+# --- 广告：Torch 聚合 + 穿山甲(Pangle)/美数/UBiX + OAID 采集（smali / classes.dex）---
+smali/com/ak
+smali/com/meishu
+smali/com/bytedance
+smali/com/bykv
+smali/com/czhj
+smali/com/bun
+smali/com/androidquery
+smali/com/asus
+smali/com/huawei
+smali/com/miui
+smali/com/example
+smali/XI
+smali/com/netease
+
+# --- 广告：GDT 优量汇 / 穿山甲 socialbase / Sigmob / UBiX / BasePopup / OAID 厂商件（classes2.dex）---
+smali_classes2/com/qq
+smali_classes2/com/ss
+smali_classes2/com/sigmob
+smali_classes2/com/ubix
+smali_classes2/razerdp
+smali_classes2/com/tan
+smali_classes2/com/samsung
+smali_classes2/com/uodis
+
+# --- 360 LDSdk（设备标识，Application 里无条件初始化）+ qihoo AK 广告落地页 ---
+smali_classes2/com/qihoo360
+smali/com/qihoo/ak
+
+# --- 隐私弹窗（启动链改为直接 start()，整包废弃；含 PrivacyActivity/ProtocolActivity）---
+smali/com/qihoo/privacy
+
+# --- 壳内已断引用的孤儿类（原 TapTap 回调 / 隐私确认 / torch 分发 lambda）---
+smali_classes2/com/qihoo/rpgplugin/MainActivity$1.smali
+smali_classes2/com/qihoo/rpgplugin/MainActivity$3.smali
+smali_classes2/com/qihoo/rpgplugin/MainActivity$4.smali
+smali_classes2/com/qihoo/rpgplugin/plugin/torch
+smali_classes2/com/qihoo/rpgplugin/plugin/alert/JsAlertHelperImpl$$ExternalSyntheticLambda0.smali
+
+# --- 原生 so（OAID 反调试 / TapTap / 广告落地）---
+lib/*/libsecsdk.so
+lib/*/libtanId.so
+lib/*/libbootid-lib.so
+lib/*/libpangleflipped.so
+
+# --- 广告 SDK assets（穿山甲 ZEUS 插件目录 / GDT 插件 / TDS 防沉迷配置 / OAID 供应商配置）---
+assets/1422834508
+assets/gdt_plugin
+assets/default_config.json
+assets/supplierconfig.json

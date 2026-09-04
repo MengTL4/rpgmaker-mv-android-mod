@@ -329,31 +329,9 @@
 
     .line 134
     :cond_0
-    sget-boolean p1, Lcom/qihoo/rpgplugin/Config;->Single_Game:Z
-
-    if-eqz p1, :cond_1
-
-    .line 135
-    sget-object p1, Lcom/qihoo/rpgplugin/Config;->APP_ID:Ljava/lang/String;
-
-    invoke-static {p0, p1}, Lcom/taptap/sdk/TapLoginHelper;->init(Landroid/content/Context;Ljava/lang/String;)V
-
-    .line 136
-    invoke-direct {p0}, Lcom/qihoo/rpgplugin/MainActivity;->taptapLoginListener()V
-
-    .line 137
-    invoke-direct {p0}, Lcom/qihoo/rpgplugin/MainActivity;->taptapAntiAddictionInit()V
-
-    .line 138
-    invoke-direct {p0}, Lcom/qihoo/rpgplugin/MainActivity;->taptapLoginStatusOnly()V
-
-    goto :goto_0
-
-    .line 140
-    :cond_1
+    # RMMOD: TapTap 登录/防沉迷 SDK 已剥离（原 Single_Game 分支），直接进游戏
     invoke-direct {p0}, Lcom/qihoo/rpgplugin/MainActivity;->createWebsite()V
 
-    :goto_0
     return-void
 .end method
 
@@ -498,12 +476,11 @@
 
     const-string v0, "android.permission.WRITE_EXTERNAL_STORAGE"
 
-    const-string v1, "android.permission.REQUEST_INSTALL_PACKAGES"
-
-    const-string v2, "android.permission.INTERNET"
+    const-string v1, "android.permission.INTERNET"
 
     .line 88
-    filled-new-array {p1, v0, v1, v2}, [Ljava/lang/String;
+    # RMMOD: 移除 REQUEST_INSTALL_PACKAGES 运行时申请（广告下载装包用，SDK 已剥离）
+    filled-new-array {p1, v0, v1}, [Ljava/lang/String;
 
     move-result-object p1
 
@@ -551,105 +528,6 @@
     move-result-object v1
 
     invoke-virtual {v1, v0}, Landroid/app/Application;->startService(Landroid/content/Intent;)Landroid/content/ComponentName;
-
-    :goto_0
-    return-void
-.end method
-
-.method private taptapAntiAddictionInit()V
-    .locals 3
-
-    .line 296
-    new-instance v0, Lcom/tapsdk/antiaddiction/config/AntiAddictionFunctionConfig$Builder;
-
-    invoke-direct {v0}, Lcom/tapsdk/antiaddiction/config/AntiAddictionFunctionConfig$Builder;-><init>()V
-
-    const/4 v1, 0x1
-
-    .line 297
-    invoke-virtual {v0, v1}, Lcom/tapsdk/antiaddiction/config/AntiAddictionFunctionConfig$Builder;->enablePaymentLimit(Z)Lcom/tapsdk/antiaddiction/config/AntiAddictionFunctionConfig$Builder;
-
-    move-result-object v0
-
-    .line 298
-    invoke-virtual {v0, v1}, Lcom/tapsdk/antiaddiction/config/AntiAddictionFunctionConfig$Builder;->enableOnLineTimeLimit(Z)Lcom/tapsdk/antiaddiction/config/AntiAddictionFunctionConfig$Builder;
-
-    move-result-object v0
-
-    const/4 v1, 0x0
-
-    .line 299
-    invoke-virtual {v0, v1}, Lcom/tapsdk/antiaddiction/config/AntiAddictionFunctionConfig$Builder;->showSwitchAccount(Z)Lcom/tapsdk/antiaddiction/config/AntiAddictionFunctionConfig$Builder;
-
-    move-result-object v0
-
-    .line 300
-    invoke-virtual {v0}, Lcom/tapsdk/antiaddiction/config/AntiAddictionFunctionConfig$Builder;->build()Lcom/tapsdk/antiaddiction/config/AntiAddictionFunctionConfig;
-
-    move-result-object v0
-
-    .line 302
-    sget-object v1, Lcom/qihoo/rpgplugin/Config;->APP_ID:Ljava/lang/String;
-
-    new-instance v2, Lcom/qihoo/rpgplugin/MainActivity$4;
-
-    invoke-direct {v2, p0}, Lcom/qihoo/rpgplugin/MainActivity$4;-><init>(Lcom/qihoo/rpgplugin/MainActivity;)V
-
-    invoke-static {p0, v1, v0, v2}, Lcom/tapsdk/antiaddictionui/AntiAddictionUIKit;->init(Landroid/app/Activity;Ljava/lang/String;Lcom/tapsdk/antiaddiction/config/AntiAddictionFunctionConfig;Lcom/tapsdk/antiaddictionui/AntiAddictionUICallback;)V
-
-    return-void
-.end method
-
-.method private taptapLoginListener()V
-    .locals 1
-
-    .line 268
-    new-instance v0, Lcom/qihoo/rpgplugin/MainActivity$3;
-
-    invoke-direct {v0, p0}, Lcom/qihoo/rpgplugin/MainActivity$3;-><init>(Lcom/qihoo/rpgplugin/MainActivity;)V
-
-    .line 291
-    invoke-static {v0}, Lcom/taptap/sdk/TapLoginHelper;->registerLoginCallback(Lcom/taptap/sdk/TapLoginHelper$TapLoginResultCallback;)V
-
-    return-void
-.end method
-
-.method private taptapLoginStatusOnly()V
-    .locals 2
-
-    .line 342
-    invoke-static {}, Lcom/taptap/sdk/TapLoginHelper;->getCurrentAccessToken()Lcom/taptap/sdk/AccessToken;
-
-    move-result-object v0
-
-    if-nez v0, :cond_0
-
-    const-string v0, "public_profile"
-
-    .line 344
-    filled-new-array {v0}, [Ljava/lang/String;
-
-    move-result-object v0
-
-    invoke-static {p0, v0}, Lcom/taptap/sdk/TapLoginHelper;->startTapLogin(Landroid/app/Activity;[Ljava/lang/String;)V
-
-    goto :goto_0
-
-    .line 347
-    :cond_0
-    invoke-static {}, Lcom/taptap/sdk/TapLoginHelper;->getCurrentProfile()Lcom/taptap/sdk/Profile;
-
-    move-result-object v0
-
-    .line 348
-    invoke-virtual {v0}, Lcom/taptap/sdk/Profile;->getOpenid()Ljava/lang/String;
-
-    move-result-object v0
-
-    const/4 v1, 0x1
-
-    .line 349
-    invoke-static {p0, v1, v0}, Lcom/tapsdk/antiaddictionui/AntiAddictionUIKit;->startup(Landroid/app/Activity;ZLjava/lang/String;)V
 
     :goto_0
     return-void
@@ -933,18 +811,8 @@
 
     iput-object v0, p0, Lcom/qihoo/rpgplugin/MainActivity;->x5WebView:Lcom/qihoo/rpgplugin/X5WebView;
 
-    .line 66
-    sget-object v0, Lcom/qihoo/privacy/PrivacyManager;->Companion:Lcom/qihoo/privacy/PrivacyManager$Companion;
-
-    invoke-virtual {v0}, Lcom/qihoo/privacy/PrivacyManager$Companion;->getInstance()Lcom/qihoo/privacy/PrivacyManager;
-
-    move-result-object v0
-
-    new-instance v1, Lcom/qihoo/rpgplugin/MainActivity$1;
-
-    invoke-direct {v1, p0, p1}, Lcom/qihoo/rpgplugin/MainActivity$1;-><init>(Lcom/qihoo/rpgplugin/MainActivity;Landroid/os/Bundle;)V
-
-    invoke-virtual {v0, p0, v1}, Lcom/qihoo/privacy/PrivacyManager;->checkPrivacy(Landroidx/appcompat/app/AppCompatActivity;Lcom/qihoo/privacy/PrivacyConfirmListener;)V
+    # RMMOD: 隐私弹窗（SDK 合规链）已剥离，跳过 checkPrivacy 直接启动
+    invoke-direct {p0, p1}, Lcom/qihoo/rpgplugin/MainActivity;->start(Landroid/os/Bundle;)V
 
     return-void
 .end method

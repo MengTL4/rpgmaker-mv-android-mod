@@ -31,7 +31,7 @@ echo "[1/7] 校验原版 APK ..."
 MD5="$(md5sum "$ORIG" | cut -d' ' -f1)"
 if [ "$MD5" != "$KNOWN_MD5" ]; then
     echo "错误: 原版 APK md5=$MD5，与补丁基线 game.apk（md5=$KNOWN_MD5, v0.6.3 vc63）不一致。"
-    echo "      补丁按该版本的混淆名制作（ce/u1、ll\$l、GatekeeperRepository 等），"
+    echo "      补丁按该版本的混淆名制作（ce/u1、MainActivity、I、a2/ll、SystemWebViewClient 等），"
     echo "      换版本必须重新 diff 并更新 patches/，见 patches/README.md。"
     exit 1
 fi
@@ -44,6 +44,17 @@ java -Xmx4g -jar tools/apktool.jar d -f "$(w "$ORIG")" -o "$(w "$STAGE")" 2>&1 |
 echo "[3/7] 应用补丁（manifest/smali/index.html + mod 网页层）..."
 cp -r "$PATCHES/." "$STAGE/"
 cp -r "$MODSRC/www/." "$STAGE/assets/www/"
+
+echo "[3.5/7] 剥离外围 SDK（strip-sdk.txt）..."
+if [ -f "$PATCHES/strip-sdk.txt" ]; then
+    while IFS= read -r line; do
+        case "$line" in ''|\#*) continue;; esac
+        for p in $STAGE/$line; do
+            [ -e "$p" ] || continue
+            rm -rf "$p"
+        done
+    done < "$PATCHES/strip-sdk.txt"
+fi
 
 echo "[4/7] 编译 mod Java -> dex ..."
 CLASSES="$OUT/classes"; DEX="$OUT/dex"
