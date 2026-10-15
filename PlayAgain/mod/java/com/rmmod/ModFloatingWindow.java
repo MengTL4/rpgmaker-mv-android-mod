@@ -2,7 +2,6 @@ package com.rmmod;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -75,17 +74,17 @@ public class ModFloatingWindow {
     }
 
     private View buildBall() {
-        // 与面板标识同色系：蓝紫渐变圆底 + 半透明白描边 + MOD 字样（静态，无动画）
+        // 与面板同色系：石墨圆底 + 金色描边 + 金色 MOD 字样（静态，无动画）
         TextView ball = new TextView(activity);
         ball.setText("MOD");
-        ball.setTextColor(Color.WHITE);
+        ball.setTextColor(0xFFFFD27A);
         ball.setTextSize(11);
         ball.setGravity(Gravity.CENTER);
         ball.setLetterSpacing(0.04f);
-        GradientDrawable gd = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
-                new int[]{0xF26E9BFF, 0xF27A5CF6});
+        GradientDrawable gd = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{0xF2232328, 0xF2131316});
         gd.setShape(GradientDrawable.OVAL);
-        gd.setStroke(dp(2), 0x66FFFFFF);
+        gd.setStroke(dp(2), 0xFFF2B33D);
         ball.setBackground(gd);
         ball.setElevation(dp(6)); // 圆形背景自带轮廓阴影
         ball.setTypeface(null, android.graphics.Typeface.BOLD);

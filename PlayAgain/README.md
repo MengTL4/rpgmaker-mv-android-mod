@@ -32,8 +32,8 @@
 
 ## 架构（混合方案：原生球 + WebView 面板）
 
-- **悬浮球**：`ModFloatingWindow` 挂在 MainActivity 的 DecorView 上（免 `SYSTEM_ALERT_WINDOW` 权限）。**静态**球：与面板标识同色系的蓝紫渐变底 + 半透明白描边 + "MOD" 字样，圆形轮廓阴影，无动画。拖动在原生层（LayoutParams 固定左上角无 margin，位置完全用 translation 表示），松手吸附左/右边缘；位置存 SharedPreferences `rmmod_prefs`（ball_side/ball_y），屏幕尺寸变化（旋转/分屏）时按新尺寸重新摆放，始终在屏内。系统 ACTION_CANCEL 不视为点击
-- **面板**：游戏 WebView 内 `rmmod.js` 注入 Vue3 + Naive UI（darkTheme，本地 vendor），修改器 / 数据两个页签（头部分段控件），右侧贴边悬浮、上下撑满。样式全部集中在 mount() 的样式表里（`:root` 上 `--rm-*` 设计令牌 + `rm-*` 类），模板不再写内联样式。v8 起 vendor（约 1.7MB）**懒加载**：`index.html` 只挂 `rmmod.js`，首次点球开面板时才动态注入 vue/naive，不拖游戏启动
+- **悬浮球**：`ModFloatingWindow` 挂在 MainActivity 的 DecorView 上（免 `SYSTEM_ALERT_WINDOW` 权限）。**静态**球：与面板同色系的石墨圆底 + 金色描边 + 金色 "MOD" 字样，圆形轮廓阴影，无动画。拖动在原生层（LayoutParams 固定左上角无 margin，位置完全用 translation 表示），松手吸附左/右边缘；位置存 SharedPreferences `rmmod_prefs`（ball_side/ball_y），屏幕尺寸变化（旋转/分屏）时按新尺寸重新摆放，始终在屏内。系统 ACTION_CANCEL 不视为点击
+- **面板**：游戏 WebView 内 `rmmod.js` 注入 Vue3 + Naive UI（darkTheme，本地 vendor），修改器 / 数据两个页签（头部下划线页签），右侧贴边悬浮、上下撑满。视觉为石墨中性色 + 单一金色强调，层级靠明度区分、不叠描边；样式全部集中在 mount() 的样式表里（`:root` 上 `--rm-*` 设计令牌 + `rm-*` 类），模板不写内联样式。v8 起 vendor（约 1.7MB）**懒加载**：`index.html` 只挂 `rmmod.js`，首次点球开面板时才动态注入 vue/naive，不拖游戏启动
 - **桥**：`window.MOD = ModBridge`（`addJavascriptInterface`）。JS 每 150ms（面板打开/页面不可见时 600ms）`takeCommand()` 拉原生命令（球点击 → `queue("menu")` → JS `__RMMOD_TOGGLE` 开面板）；`setBallVisible` 开面板时藏球；`log` → `Log.i("RMMOD")`
 - **入口补丁**：`decode/smali_classes2/com/qihoo/rpgplugin/MainActivity.smali`
   - `createWebsite()` 第 260 行：`invoke-static {p0}, Lcom/rmmod/ModFloatingWindow;->show(Landroid/app/Activity;)V`
@@ -42,8 +42,8 @@
 
 ## 功能清单
 
-- 作弊开关（卡片式：图标 + 名称 + 一句话说明，点整张卡切换，开启为绿色态；组标题显示已开数量，一键全部关闭）：战斗（无敌/一击必杀/免技能消耗，均只作用于我方）、移动（穿墙/无遇敌/常时奔跑）、锁定（HP/满HP/MP/TP）
-- 倍率档位：经验/金钱 ×1/2/5/10/50/100、掉落 ×1/2/3/5/10，另可自定义 1~100（替代原 1~100 滑条：手机上一格约 2px 难以精确，且拖动依赖合成鼠标事件）；移速加成 默认/+0.5/+1/+1.5/+2/+3（更大会跳格）
+- 作弊开关（两列开关项：名称 + 一句话说明 + 开关，点整项切换，开启为金色态；组标题显示已开数量，一键全部关闭）：战斗（无敌/一击必杀/免技能消耗，均只作用于我方）、移动（穿墙/无遇敌/常时奔跑）、锁定（HP/满HP/MP/TP）
+- 倍率档位：经验/金钱 ×1/2/5/10/50/100、掉落 ×1/2/3/5/10，另可自定义 1~100，分段控件呈现（替代原 1~100 滑条：手机上一格约 2px 难以精确，且拖动依赖合成鼠标事件）；移速加成 默认/+0.5/+1/+1.5/+2/+3（更大会跳格）
 - 锁值步进：锁HP值/锁MP值（步进 100）、锁TP值（步进 10），不超过上限
 - 快捷操作（分组）：金币增加/设为任意值；战斗（全队回满/全灭敌人/逃离战斗，非战斗时禁用）；物资（全物品/武器/防具×99，物品不含重要/隐藏物品）；存档（存/读槽1、新游戏、回标题，覆盖与丢进度操作二次确认）；卡死修复（恢复画面/清除图片/中止事件/解除强制移动/返回地图）
 - 数据 tab：物品/武器/防具/角色/地图/开关/变量 分类 + 搜索 + 刷新 + naive-ui 虚拟滚动（1152 条目），图标解密渲染，表格高度随屏幕自适应；详情弹窗操作后不关闭、原地刷新（物品 +1/+10/+99/-1/清零，角色显示等级/HP/MP 且等级默认当前值）
