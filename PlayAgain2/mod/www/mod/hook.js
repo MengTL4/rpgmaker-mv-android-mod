@@ -164,8 +164,17 @@
         try {
             if (!window.TouchInput || !document.getElementById('GameCanvas')) return false;
             var ti = window.TouchInput;
-            document.addEventListener('touchstart', function (e) { try { ti._onTouchStart(e); } catch (err) { } }, true);
-            document.addEventListener('touchmove', function (e) { try { ti._onTouchMove(e); } catch (err) { } }, true);
+            /* document 捕获阶段早于 rmmod.js 在 body 上的触摸拦截：MOD 面板/弹层上的按下与滑动
+               必须跳过，否则游戏 _onTouchStart 会对其 preventDefault（面板无法滚动）并把点按当成
+               地图点击（人物朝面板背后走）。抬起/取消照常转发，避免游戏侧按压状态卡住。 */
+            function fromModUi(e) {
+                try {
+                    var t = e && e.target;
+                    return !!(t && t.closest && t.closest('#rmmod-ui,.n-modal-container,.n-dialog-container,.v-binder-follower-container,#rm-toasts'));
+                } catch (err) { return false; }
+            }
+            document.addEventListener('touchstart', function (e) { if (fromModUi(e)) return; try { ti._onTouchStart(e); } catch (err) { } }, true);
+            document.addEventListener('touchmove', function (e) { if (fromModUi(e)) return; try { ti._onTouchMove(e); } catch (err) { } }, true);
             document.addEventListener('touchend', function (e) { try { ti._onTouchEnd(e); } catch (err) { } }, true);
             document.addEventListener('touchcancel', function (e) { try { ti._onTouchCancel(e); } catch (err) { } }, true);
             window.__modInputFixed = true;

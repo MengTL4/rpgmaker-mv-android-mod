@@ -70,6 +70,8 @@
 
 **ResizeObserver 错误误杀（v8 补丁）**：naive-ui 虚拟列表一帧内尺寸未收敛会抛 `ResizeObserver loop completed with undelivered notifications.`——浏览器规范允许忽略的无害通知，但游戏把 window error 挂到致命错误画面，数据 tab 角色技能搜索（列表重排）即弹全屏 Error。hook.js 在 **capture 阶段**挂 error 过滤器（`stopImmediatePropagation + preventDefault`），先于游戏 handler 吞掉该类错误；已注入合成错误验证不再弹画面。
 
+**触摸路由漏到 MOD 面板（v9 修复）**：hook.js 在 document **捕获阶段**补挂的 TouchInput 路由早于 rmmod.js 在 body 上的触摸拦截，面板上的按下/滑动也被转给游戏——`_onTouchStart` 对其 preventDefault（面板滚不动）并当成地图点击（人物朝面板背后走）。路由现跳过来源于 MOD UI（`#rmmod-ui`/Naive 弹层/toast）的 touchstart/touchmove，touchend/touchcancel 照常转发以免游戏按压状态卡住。
+
 ## 三、启动链与自动启动
 
 真加载器（`sc_0004.js`，诊断捕获）末尾：`if (document.readyState === 'complete') { TK.$.SceneMrg.run(Scene_Boot); }`。原版包靠 Java 侧触发器（与 TapSDK 合规流绑定）唤起；**重签包上该触发不发生** → 黑屏死等。
@@ -183,7 +185,7 @@ PlayAgain2/
 ├── decode/                   # apktool 反编译产物（已打补丁，调试/查阅用；一键构建不依赖它）
 ├── mod/
 │   ├── java/                 # 一代三件套源码（复用，编译出 classes5.dex）
-│   └── www/mod/              # hook.js(v8, WebGL 热切) + rmmod.js(v8 懒加载 UI+hook+图标) + vendor/
+│   └── www/mod/              # hook.js(v8, WebGL 热切) + rmmod.js(v9 懒加载 UI+hook+图标，与一代逐字一致仅 GAME_NAME 不同) + vendor/
 ├── original-data-backup/     # 原版私有数据备份
 └── build/PlayAgain2-mod.apk  # 最终产物
 ```
