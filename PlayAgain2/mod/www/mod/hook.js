@@ -61,15 +61,27 @@
         try { window.Function.prototype.constructor = window.Function; } catch (e) { }
     } catch (e) { log('Function hook fail ' + e); }
 
-    /* 定时器回调特征拦截（不依赖 eval patch 的新防线） */
+    /* 定时器回调特征拦截（不依赖 eval patch 的新防线）
+       性能：页面里所有 setTimeout/setInterval 都经过这里，String(fn) 要反编译整段函数源码。
+       同一函数引用（游戏/库反复注册的回调）的判定结果用 WeakMap 缓存，只反编译一次。 */
     try {
         var _SI = window.setInterval, _ST = window.setTimeout;
+        var verdict = typeof WeakMap === 'function' ? new WeakMap() : null;
+        var timerBlocked = function (fn) {
+            if (typeof fn !== 'function') return isAntiTamper(fn);
+            if (verdict) {
+                var v = verdict.get(fn);
+                if (v === undefined) { v = isAntiTamper(String(fn)); verdict.set(fn, v); }
+                return v;
+            }
+            return isAntiTamper(String(fn));
+        };
         window.setInterval = function (fn, ms) {
-            if (isAntiTamper(String(fn))) { log('BLOCKED anti-tamper setInterval len=' + String(fn).length); return 0; }
+            if (timerBlocked(fn)) { log('BLOCKED anti-tamper setInterval len=' + String(fn).length); return 0; }
             return _SI.apply(window, arguments);
         };
         window.setTimeout = function (fn, ms) {
-            if (isAntiTamper(String(fn))) { log('BLOCKED anti-tamper setTimeout len=' + String(fn).length); return 0; }
+            if (timerBlocked(fn)) { log('BLOCKED anti-tamper setTimeout len=' + String(fn).length); return 0; }
             return _ST.apply(window, arguments);
         };
     } catch (e) { log('timer hook fail ' + e); }
@@ -115,6 +127,7 @@
      * 删除，真身存在混淆名（sduUDsaagdia_g 等），TK.$.temporaryRestore() 是游戏自留的
      * 互备工具（幂等）。rmmod.js 还需要 Game_Battler/Game_CharacterBase/Game_Player/
      * Game_Action，分别从原型链/实例反推/原型特征扫描补齐。 */
+    var gameActionCtor = null, gameActionScans = 0, gameActionLastScan = 0;
     function restoreGameClasses() {
         try {
             if (typeof TK === 'undefined' || !TK.$ || !TK.$.temporaryRestore) return false;
@@ -134,19 +147,28 @@
                 } catch (e) { }
             }
             if (!window.Game_Action) {
-                /* Game_Action 特征：prototype 上同时有 setSubject/apply/itemEffect，扫 window 找混淆真身 */
-                for (var k in window) {
-                    try {
-                        var f = window[k];
-                        if (typeof f === 'function' && f.prototype
-                            && typeof f.prototype.setSubject === 'function'
-                            && typeof f.prototype.apply === 'function'
-                            && typeof f.prototype.itemEffect === 'function') {
-                            window.Game_Action = f;
-                            log('Game_Action restored from window.' + k);
-                            break;
-                        }
-                    } catch (e) { }
+                /* Game_Action 特征：prototype 上同时有 setSubject/apply/itemEffect，扫 window 找混淆真身。
+                   性能：全量枚举 window（上千个键，含会触发 getter 的镜像）不能放在 150ms 清扫里反复做——
+                   找到后缓存构造器，之后只回填；没找到时每 2s 最多扫一次，60 次后放弃 */
+                if (gameActionCtor) {
+                    window.Game_Action = gameActionCtor;
+                } else if (gameActionScans < 60 && Date.now() - gameActionLastScan >= 2000) {
+                    gameActionScans++;
+                    gameActionLastScan = Date.now();
+                    for (var k in window) {
+                        try {
+                            var f = window[k];
+                            if (typeof f === 'function' && f.prototype
+                                && typeof f.prototype.setSubject === 'function'
+                                && typeof f.prototype.apply === 'function'
+                                && typeof f.prototype.itemEffect === 'function') {
+                                gameActionCtor = f;
+                                window.Game_Action = f;
+                                log('Game_Action restored from window.' + k);
+                                break;
+                            }
+                        } catch (e) { }
+                    }
                 }
             }
             if (!window.__gameClassesRestored
@@ -194,12 +216,16 @@
     }
 
     /* ---------- 2.8 WebGL 渲染器热切换 ---------- */
+    var webglGaveUp = false;
     function switchToWebGL() {
+        /* 只尝试一次：失败后若每 150ms 重试，每次都会新建 canvas + WebGL 上下文（浏览器上下文数有上限，
+           旧上下文被强制回收还会连带丢失），既卡顿又可能把游戏自己的画布挤掉 */
+        if (webglGaveUp) return false;
         try {
             if (window.__modWebGL) return true;
             if (!window.Graphics || !Graphics._renderer || !window.PIXI || !PIXI.WebGLRenderer) return false;
             if (Graphics.isWebGL()) { window.__modWebGL = true; return true; }
-            if (Graphics.hasWebGL && !Graphics.hasWebGL()) return false;
+            if (Graphics.hasWebGL && !Graphics.hasWebGL()) { webglGaveUp = true; return false; }
             var old = Graphics._canvas;
             var parent = old && old.parentElement;
             if (!parent) return false;
@@ -220,7 +246,7 @@
             window.__modWebGL = true;
             log('renderer switched to WebGL ' + nc.width + 'x' + nc.height);
             return true;
-        } catch (e) { log('webgl switch fail ' + (e && e.message)); return false; }
+        } catch (e) { webglGaveUp = true; log('webgl switch fail ' + (e && e.message)); return false; }
     }
 
     /* ---------- 3. MV 全局镜像(TK.$ -> window 标准名) ---------- */

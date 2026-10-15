@@ -52,6 +52,9 @@
         }
     } catch (e) {}
 
+    // 钩子专用的原始对象引用：initUi 会把 state 换成同一对象的响应式代理，cfg 始终指向原对象
+    var cfg = state;
+
     var persistT = null;
     function persistState() {
         if (persistT) clearTimeout(persistT);
@@ -380,7 +383,7 @@
        prototype 会被覆盖失效。hookMethod 沿原型链找到方法"实际定义层"打补丁；__rmhook 去重避免
        经多个子类重复包装（如 realMoveSpeed 被多次叠加）。
        另注意：两代引擎都没有 isPlayer() 方法，玩家判断用实例身份（self === $gamePlayer）。 */
-    function hookMethod(ctor, name, wrap) {
+    function hookMethod(ctor, name, make) {
         try {
             if (!ctor || !ctor.prototype) return false;
             var target = ctor.prototype, o = ctor.prototype;
@@ -391,42 +394,51 @@
             var orig = target[name];
             if (typeof orig !== 'function') return false;
             if (orig.__rmhook) return false; // 已在其定义层打过
-            var wrapped = function () { return wrap(this, arguments, orig); };
+            var wrapped = make(orig);
             wrapped.__rmhook = true;
             target[name] = wrapped;
             return true;
         } catch (e) { return false; }
     }
 
-    function hookAll() {
+    /* 性能：移动/通行类钩子每帧对地图上每个角色调用（几十个事件 × 60fps）。
+       - 钩子读 cfg（原始对象）而非 Vue 响应式代理：UI 加载后 state 变成 Proxy，每次读都走 get 陷阱；
+         Proxy 写入会同步落到同一个原始对象，所以 cfg 永远是最新值。
+       - 由 make(orig) 直接生成包装函数，用 orig.apply(this, arguments) 透传：旧写法
+         wrap(this, arguments, orig) 把 arguments 传给另一个函数，每次调用都要分配 arguments 对象。
+       - 先判开关再判玩家（二代 $gamePlayer 是 getter，开关关闭时不触发）。 */
+    function installHooks() {
         var ok = 0;
-        function H(ctor, name, wrap) { if (hookMethod(ctor, name, wrap)) ok++; }
+        function H(ctor, name, make) { if (hookMethod(ctor, name, make)) ok++; }
         var G = function (n) { try { return window[n] || null; } catch (e) { return null; } };
 
         /* 倍率 */
-        H(G('Game_Actor'), 'gainExp', function (self, args, orig) {
-            var exp = args[0];
-            if (exp > 0 && state.expmult !== 1) args[0] = Math.round(exp * state.expmult);
-            return orig.apply(self, args);
+        H(G('Game_Actor'), 'gainExp', function (orig) {
+            return function (exp) {
+                if (exp > 0 && cfg.expmult !== 1) arguments[0] = Math.round(exp * cfg.expmult);
+                return orig.apply(this, arguments);
+            };
         });
-        H(G('Game_Party'), 'gainGold', function (self, args, orig) {
-            var amount = args[0];
-            if (!bypassMult && amount > 0 && state.goldmult !== 1) args[0] = Math.round(amount * state.goldmult);
-            return orig.apply(self, args);
+        H(G('Game_Party'), 'gainGold', function (orig) {
+            return function (amount) {
+                if (!bypassMult && amount > 0 && cfg.goldmult !== 1) arguments[0] = Math.round(amount * cfg.goldmult);
+                return orig.apply(this, arguments);
+            };
         });
         /* 伤害：一击必杀只对"我方打敌方"生效（混乱时我方互殴不秒队友）；
            无敌在伤害源头把我方受到的正伤害归零（注意 subject 是方法必须调用） */
-        H(G('Game_Action'), 'makeDamageValue', function (self, args, orig) {
-            var v = orig.apply(self, args);
-            if (!(v > 0)) return v;
-            var target = args[0];
-            if (state.invincible && isActorObj(target)) return 0;
-            if (state.onehit && target && !isActorObj(target)) {
-                var su = null;
-                try { su = (typeof self.subject === 'function') ? self.subject() : self.subject; } catch (e) {}
-                if (isActorObj(su)) v = Math.max(v, ((target.mhp || target.hp || 99999) * 10));
-            }
-            return v;
+        H(G('Game_Action'), 'makeDamageValue', function (orig) {
+            return function (target) {
+                var v = orig.apply(this, arguments);
+                if (!(v > 0) || !(cfg.invincible || cfg.onehit)) return v;
+                if (cfg.invincible && isActorObj(target)) return 0;
+                if (cfg.onehit && target && !isActorObj(target)) {
+                    var su = null;
+                    try { su = (typeof this.subject === 'function') ? this.subject() : this.subject; } catch (e) {}
+                    if (isActorObj(su)) v = Math.max(v, ((target.mhp || target.hp || 99999) * 10));
+                }
+                return v;
+            };
         });
         /* 无敌/免消耗：逐类打（覆盖子类自有实现），且只作用于我方——
            旧版不分敌我，开无敌后敌人同样不掉血、敌人放技能同样免消耗 */
@@ -434,22 +446,26 @@
         for (var bi = 0; bi < battlers.length; bi++) {
             var C = battlers[bi];
             if (!C) continue;
-            H(C, 'gainHp', function (self, args, orig) {
-                if (state.invincible && args[0] < 0 && isActorObj(self)) args[0] = 0;
-                return orig.apply(self, args);
+            H(C, 'gainHp', function (orig) {
+                return function (value) {
+                    if (cfg.invincible && value < 0 && isActorObj(this)) arguments[0] = 0;
+                    return orig.apply(this, arguments);
+                };
             });
-            H(C, 'addState', function (self, args, orig) {
-                // 无敌时挡掉"即死"类状态（即死技能/事件直接附加战斗不能，不经过 gainHp）
-                if (state.invincible && isActorObj(self)) {
-                    try { if (self.deathStateId && args[0] === self.deathStateId()) return; } catch (e) {}
-                }
-                return orig.apply(self, args);
+            H(C, 'addState', function (orig) {
+                return function (stateId) {
+                    // 无敌时挡掉"即死"类状态（即死技能/事件直接附加战斗不能，不经过 gainHp）
+                    if (cfg.invincible && isActorObj(this)) {
+                        try { if (this.deathStateId && stateId === this.deathStateId()) return; } catch (e) {}
+                    }
+                    return orig.apply(this, arguments);
+                };
             });
-            H(C, 'skillMpCost', function (self, args, orig) {
-                return (state.noskill && isActorObj(self)) ? 0 : orig.apply(self, args);
+            H(C, 'skillMpCost', function (orig) {
+                return function () { return (cfg.noskill && isActorObj(this)) ? 0 : orig.apply(this, arguments); };
             });
-            H(C, 'skillTpCost', function (self, args, orig) {
-                return (state.noskill && isActorObj(self)) ? 0 : orig.apply(self, args);
+            H(C, 'skillTpCost', function (orig) {
+                return function () { return (cfg.noskill && isActorObj(this)) ? 0 : orig.apply(this, arguments); };
             });
         }
         /* 移动：穿墙同时打 isMapPassable（地形）与 isThrough（事件/NPC 碰撞），只对玩家生效；
@@ -458,58 +474,80 @@
         for (var mi = 0; mi < movers.length; mi++) {
             var M = movers[mi];
             if (!M) continue;
-            H(M, 'isMapPassable', function (self, args, orig) {
-                if (state.through && self === window.$gamePlayer) return true;
-                return orig.apply(self, args);
+            H(M, 'isMapPassable', function (orig) {
+                return function () {
+                    if (cfg.through && this === window.$gamePlayer) return true;
+                    return orig.apply(this, arguments);
+                };
             });
-            H(M, 'isThrough', function (self, args, orig) {
-                if (state.through && self === window.$gamePlayer) return true;
-                return orig.apply(self, args);
+            H(M, 'isThrough', function (orig) {
+                return function () {
+                    if (cfg.through && this === window.$gamePlayer) return true;
+                    return orig.apply(this, arguments);
+                };
             });
-            H(M, 'realMoveSpeed', function (self, args, orig) {
-                var s = orig.apply(self, args);
-                if (state.movespeed && self === window.$gamePlayer) s += state.movespeed;
-                return s;
+            H(M, 'realMoveSpeed', function (orig) {
+                return function () {
+                    var s = orig.apply(this, arguments);
+                    if (cfg.movespeed && this === window.$gamePlayer) s += cfg.movespeed;
+                    return s;
+                };
             });
         }
-        H(G('Game_Player'), 'isDashButtonPressed', function (self, args, orig) {
-            return state.dash ? true : orig.apply(self, args);
+        H(G('Game_Player'), 'isDashButtonPressed', function (orig) {
+            return function () { return cfg.dash ? true : orig.apply(this, arguments); };
         });
         /* 无遇敌：旧版 hook makeEncounterCount 返回 0——但原版该方法是"给 _encounterCount 赋值"
            而不是返回值，替换后计数器永不重置，走一步就 ≤0 触发遇敌，效果正好相反（每步遇敌）。
            改为让 canEncounter / executeEncounter 返回 false */
-        H(G('Game_Player'), 'canEncounter', function (self, args, orig) {
-            return state.noencounter ? false : orig.apply(self, args);
+        H(G('Game_Player'), 'canEncounter', function (orig) {
+            return function () { return cfg.noencounter ? false : orig.apply(this, arguments); };
         });
-        H(G('Game_Player'), 'executeEncounter', function (self, args, orig) {
-            return state.noencounter ? false : orig.apply(self, args);
+        H(G('Game_Player'), 'executeEncounter', function (orig) {
+            return function () { return cfg.noencounter ? false : orig.apply(this, arguments); };
         });
         /* 掉落：按倍率复制每件掉落物（整数倍） */
-        H(G('Game_Enemy'), 'makeDropItems', function (self, args, orig) {
-            var items = orig.apply(self, args);
-            var m = Math.round(state.dropmult) || 1;
-            if (m > 1 && items && items.length) {
-                var out = [];
-                for (var i = 0; i < items.length; i++) for (var j = 0; j < m; j++) out.push(items[i]);
-                return out;
-            }
-            return items;
+        H(G('Game_Enemy'), 'makeDropItems', function (orig) {
+            return function () {
+                var items = orig.apply(this, arguments);
+                var m = Math.round(cfg.dropmult) || 1;
+                if (m > 1 && items && items.length) {
+                    var out = [];
+                    for (var i = 0; i < items.length; i++) for (var j = 0; j < m; j++) out.push(items[i]);
+                    return out;
+                }
+                return items;
+            };
         });
+        return ok;
+    }
+
+    function hookAll() {
+        var ok = installHooks();
+        /* 二代的 Game_Action/Game_Player 等由 hook.js 从混淆名补回，可能晚于 Game_Battler 就绪；
+           安装是幂等的（已包装的方法带 __rmhook 会跳过），前 60s 每 2s 补装一次缺失的钩子 */
+        var lateTries = 0;
+        var lateTimer = setInterval(function () {
+            var n = 0;
+            try { n = installHooks(); } catch (e) {}
+            if (n) L('late hooks installed (+' + n + ')');
+            if (++lateTries >= 30) clearInterval(lateTimer);
+        }, 2000);
         /* 锁定：引擎 Game_Battler 没有 update 方法（v7 包装 undefined 每次调用必抛异常，
            锁定从未生效），改用定时回写，地图/战斗都生效。指定值不超过上限 */
         setInterval(function () {
             try {
-                if (!(state.lockhp || state.lockhpmax || state.lockmp || state.locktp)) return;
+                if (!(cfg.lockhp || cfg.lockhpmax || cfg.lockmp || cfg.locktp)) return;
                 var d = pActors(); if (!d) return;
                 for (var i = 1; i < d.length; i++) {
                     var a = d[i]; if (!a) continue;
                     if (a.isAlive && !a.isAlive()) continue;
-                    if (state.lockhpmax) a._hp = a.mhp;
-                    else if (state.lockhp) a._hp = state.lockhpval > 0 ? Math.min(state.lockhpval, a.mhp) : a.mhp;
-                    if (state.lockmp) a._mp = state.lockmpval > 0 ? Math.min(state.lockmpval, a.mmp) : a.mmp;
-                    if (state.locktp) {
+                    if (cfg.lockhpmax) a._hp = a.mhp;
+                    else if (cfg.lockhp) a._hp = cfg.lockhpval > 0 ? Math.min(cfg.lockhpval, a.mhp) : a.mhp;
+                    if (cfg.lockmp) a._mp = cfg.lockmpval > 0 ? Math.min(cfg.lockmpval, a.mmp) : a.mmp;
+                    if (cfg.locktp) {
                         var mtp = typeof a.maxTp === 'function' ? a.maxTp() : 100;
-                        a._tp = state.locktpval > 0 ? Math.min(state.locktpval, mtp) : mtp;
+                        a._tp = cfg.locktpval > 0 ? Math.min(cfg.locktpval, mtp) : mtp;
                     }
                 }
             } catch (e) {}
@@ -566,8 +604,14 @@
         L('cmd result ' + r);
         return r;
     }
-    // 150ms 拉取一次原生命令（点球 → 开面板的响应延迟上限）
+    /* 拉取原生命令：每次 takeCommand 都是一次同步 JS→Java 跨线程调用。
+       面板关闭时 150ms 一次（点球 → 开面板的响应延迟上限）；面板打开时球已隐藏、
+       几乎不会有新命令，页面不可见时也无需响应，都降到 600ms 一次 */
+    var pollTick = 0;
     setInterval(function () {
+        pollTick++;
+        var idle = panelOpen || document.hidden;
+        if (idle && (pollTick & 3) !== 0) return;
         try { if (window.MOD && window.MOD.takeCommand) { var c = window.MOD.takeCommand(); if (c) exec(c); } } catch (e) {}
     }, 150);
 
@@ -616,6 +660,7 @@
      * vue/naive 共约 1.7MB，不再随游戏启动解析；首次点球/开面板时才注入 <script>。
      * 作弊钩子与 Java 命令通道不依赖 UI，游戏启动即生效。 */
     var uiReady = false, uiBooting = false, uiWantOpen = false;
+    var panelOpen = false; // 面板可见状态（命令轮询降频用）
     function loadScript(src, ok) {
         // 加载失败重试时不重复注入已成功的脚本
         if (src.indexOf('vue.global') >= 0 && window.Vue) return ok();
@@ -654,11 +699,10 @@
     }
 
     /* MOD UI 元素判定（面板挂载点 / Naive 传送到 body 的弹层 / toast） */
+    /* 每个触摸/指针事件都会调用（含游戏画布上的操作）：合并成一次 closest 查询 */
+    var MOD_UI_SEL = '#rmmod-ui,.n-modal-container,.n-dialog-container,.v-binder-follower-container,#rm-toasts';
     function isModUiTarget(t) {
-        try {
-            return !!(t && t.closest && (t.closest('#rmmod-ui') || t.closest('.n-modal-container')
-                || t.closest('.n-dialog-container') || t.closest('.v-binder-follower-container') || t.closest('#rm-toasts')));
-        } catch (e) { return false; }
+        try { return !!(t && t.closest && t.closest(MOD_UI_SEL)); } catch (e) { return false; }
     }
 
     /* ==================== UI（首次打开面板时才执行；依赖 vendor） ==================== */
@@ -765,6 +809,7 @@
            作为裁剪源。3s 内未就绪则并行走一代的 rpgmvp XHR（密钥优先取 $dataSystem.encryptionKey），
            谁先成功用谁；加载中不重复发起。 */
         var iconSetImg = null, iconCache = {}, iconRev = ref(0), iconLoading = false;
+        var iconCanvas = null, iconCtx = null; // 裁剪单个图标复用的 32x32 画布（快速滚动列表时不反复创建）
         var ICON_KEY_FALLBACK = 'a7f1bbc90496ca91cfd4c4fd6a33d161';
         function iconLoaded(src, how) {
             if (iconSetImg) return;
@@ -837,10 +882,10 @@
             try {
                 var x = (index % 16) * 32, y = Math.floor(index / 16) * 32;
                 if (x < iconSetImg.width && y < iconSetImg.height) {
-                    var c = document.createElement('canvas');
-                    c.width = c.height = 32;
-                    c.getContext('2d').drawImage(iconSetImg, x, y, 32, 32, 0, 0, 32, 32);
-                    url = c.toDataURL(); // 跨源污染画布会抛 SecurityError，吞掉只是不显示图标
+                    if (!iconCanvas) { iconCanvas = document.createElement('canvas'); iconCanvas.width = iconCanvas.height = 32; iconCtx = iconCanvas.getContext('2d'); }
+                    iconCtx.clearRect(0, 0, 32, 32);
+                    iconCtx.drawImage(iconSetImg, x, y, 32, 32, 0, 0, 32, 32);
+                    url = iconCanvas.toDataURL(); // 跨源污染画布会抛 SecurityError，吞掉只是不显示图标
                 }
             } catch (e) { url = null; }
             iconCache[index] = url;
@@ -975,7 +1020,11 @@
                         try { if (window.$gameParty && window.$gameParty._actors) s.party = ($gameParty._actors || []).length; } catch (e) {}
                         try { if (window.$gameMap && typeof $gameMap.displayName === 'function') { var dn = $gameMap.displayName(); if (dn) s.map = dn; } } catch (e) {}
                     }
-                    status.value = s;
+                    // 面板是单个大组件：每秒整体替换 status 会让整个面板（含开关/倍率/按钮）重渲染一次，
+                    // 只有字段真的变化时才替换
+                    var o = status.value;
+                    if (o.scene !== s.scene || o.battle !== s.battle || o.map !== s.map || o.gold !== s.gold
+                        || o.party !== s.party || o.inGame !== s.inGame) status.value = s;
                 }
 
                 /* ---- 作弊开关 / 倍率 ---- */
@@ -1218,6 +1267,7 @@
                     on = !!on;
                     if (show.value === on) return;
                     show.value = on;
+                    panelOpen = on;
                     if (on) {
                         refreshStatus(); refreshList();
                         /* 图标集偶发加载失败（启动竞态）时，开面板自动补一次 */
@@ -1592,10 +1642,11 @@
                 target.dispatchEvent(syn);
             }
             document.body.addEventListener('pointerdown', function (e) {
-                shimDown = (e.pointerType === 'touch') ? { x: e.clientX, y: e.clientY, t: Date.now(), target: e.target, decided: null } : null;
+                // 只记录 MOD UI 上的按下：游戏画布上的拖动（每秒上百个 pointermove）随即在首个判断处返回
+                shimDown = (e.pointerType === 'touch' && isModUiTarget(e.target)) ? { x: e.clientX, y: e.clientY, t: Date.now(), target: e.target, decided: null } : null;
             }, true);
             document.body.addEventListener('pointermove', function (e) {
-                if (!shimDown || e.pointerType !== 'touch' || !isModUiTarget(e.target)) return;
+                if (!shimDown || e.pointerType !== 'touch') return;
                 if (!shimDown.decided) {
                     var dx = e.clientX - shimDown.x, dy = e.clientY - shimDown.y;
                     if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 12) shimDown.decided = 'v'; // 纵向滚动，放弃鼠标合成
@@ -1607,7 +1658,7 @@
             document.body.addEventListener('pointerup', function (e) {
                 var down = shimDown;
                 shimDown = null;
-                if (!down || e.pointerType !== 'touch' || !isModUiTarget(e.target)) return;
+                if (!down || e.pointerType !== 'touch') return;
                 if (!down.decided) {
                     // 静止点按：补全 mousedown/mouseup
                     fireMouse(e.target, 'mousedown', e.clientX, e.clientY);

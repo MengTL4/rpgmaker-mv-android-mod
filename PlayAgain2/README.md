@@ -70,6 +70,8 @@
 
 **ResizeObserver 错误误杀（v8 补丁）**：naive-ui 虚拟列表一帧内尺寸未收敛会抛 `ResizeObserver loop completed with undelivered notifications.`——浏览器规范允许忽略的无害通知，但游戏把 window error 挂到致命错误画面，数据 tab 角色技能搜索（列表重排）即弹全屏 Error。hook.js 在 **capture 阶段**挂 error 过滤器（`stopImmediatePropagation + preventDefault`），先于游戏 handler 吞掉该类错误；已注入合成错误验证不再弹画面。
 
+**hook.js 性能（v9）**：①全局 `setTimeout/setInterval` 包装对每次调用都 `String(fn)` 反编译回调源码做特征匹配 → 按函数引用 WeakMap 缓存判定；②150ms 清扫在 `Game_Action` 缺失时每次全量枚举 window（上千键，含会触发 getter 的镜像）→ 找到后缓存构造器只回填，未找到时每 2s 最多扫一次、60 次后放弃（rmmod.js 前 60s 每 2s 幂等补装缺失钩子）；③WebGL 热切换失败后每 150ms 重试、每次新建 WebGL 上下文 → 只尝试一次。
+
 **触摸路由漏到 MOD 面板（v9 修复）**：hook.js 在 document **捕获阶段**补挂的 TouchInput 路由早于 rmmod.js 在 body 上的触摸拦截，面板上的按下/滑动也被转给游戏——`_onTouchStart` 对其 preventDefault（面板滚不动）并当成地图点击（人物朝面板背后走）。路由现跳过来源于 MOD UI（`#rmmod-ui`/Naive 弹层/toast）的 touchstart/touchmove，touchend/touchcancel 照常转发以免游戏按压状态卡住。
 
 ## 三、启动链与自动启动

@@ -34,7 +34,7 @@
 
 - **悬浮球**：`ModFloatingWindow` 挂在 MainActivity 的 DecorView 上（免 `SYSTEM_ALERT_WINDOW` 权限）。LGLTeam/SemiJni 风格**静态**球：深蓝渐变底 + 绿描边 + "MOD" 字样，圆形轮廓阴影，无动画。拖动在原生层（LayoutParams 固定左上角无 margin，位置完全用 translation 表示），松手吸附左/右边缘；位置存 SharedPreferences `rmmod_prefs`（ball_side/ball_y），屏幕尺寸变化（旋转/分屏）时按新尺寸重新摆放，始终在屏内。系统 ACTION_CANCEL 不视为点击
 - **面板**：游戏 WebView 内 `rmmod.js` 注入 Vue3 + Naive UI（darkTheme，本地 vendor），修改器 / 数据两个 tab，右上角悬浮。v8 起 vendor（约 1.7MB）**懒加载**：`index.html` 只挂 `rmmod.js`，首次点球开面板时才动态注入 vue/naive，不拖游戏启动
-- **桥**：`window.MOD = ModBridge`（`addJavascriptInterface`）。JS 每 150ms `takeCommand()` 拉原生命令（球点击 → `queue("menu")` → JS `__RMMOD_TOGGLE` 开面板）；`setBallVisible` 开面板时藏球；`log` → `Log.i("RMMOD")`
+- **桥**：`window.MOD = ModBridge`（`addJavascriptInterface`）。JS 每 150ms（面板打开/页面不可见时 600ms）`takeCommand()` 拉原生命令（球点击 → `queue("menu")` → JS `__RMMOD_TOGGLE` 开面板）；`setBallVisible` 开面板时藏球；`log` → `Log.i("RMMOD")`
 - **入口补丁**：`decode/smali_classes2/com/qihoo/rpgplugin/MainActivity.smali`
   - `createWebsite()` 第 260 行：`invoke-static {p0}, Lcom/rmmod/ModFloatingWindow;->show(Landroid/app/Activity;)V`
   - `onDestroy()` 第 958 行：`invoke-static {}, Lcom/rmmod/ModFloatingWindow;->hide()V`
@@ -67,6 +67,7 @@
 - **设等级按差值算**：`changeLevel(level)` 参数是目标等级，旧版传 `目标-当前`，设 50 级得到 49 级，再设一次变 1 级
 - **全灭敌人无效**：原版没有 `BattleManager._enemies`，改用 `$gameTroop.aliveMembers()`；战斗判定改用 `$gameParty.inBattle()`（`_phase` 战后不清空），并播放倒下效果
 - **数量"设为 0"变成 1**、**变量 `12abc` 被截成 12**、**非战斗时"全灭敌人"也提示成功**、**存档不调 `onBeforeSave`/读档不调 `onAfterLoad`**、**全物品发放空名占位条目** 等一并修复
+- **性能**：作弊钩子读原始配置对象（不走 Vue 响应式 Proxy）、直接生成包装函数透传 `arguments`（不再每次调用分配 arguments 对象），每帧对所有角色调用的移动/通行钩子开销降到约 1/60；触摸补丁只跟踪 MOD UI 上的按下，游戏画布上的拖动不再逐事件做 DOM 查询；状态栏无变化不触发整面板重渲染；图标裁剪复用同一画布
 - 页面重载时若面板开着，原生球会永久隐藏 → 启动即恢复球显示；`ModBridge` 日志队列无上限增长 → 限 200 条
 
 ## 性能（实测，作为"不换原生控件框架"的依据）
