@@ -75,16 +75,17 @@ public class ModFloatingWindow {
     }
 
     private View buildBall() {
-        // LGLTeam/SemiJni 风格：深色渐变圆底 + 绿色描边 + MOD 字样（静态，无动画）
+        // 与面板标识同色系：蓝紫渐变圆底 + 半透明白描边 + MOD 字样（静态，无动画）
         TextView ball = new TextView(activity);
         ball.setText("MOD");
         ball.setTextColor(Color.WHITE);
         ball.setTextSize(11);
         ball.setGravity(Gravity.CENTER);
-        GradientDrawable gd = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{0xF2283648, 0xF2141A24});
+        ball.setLetterSpacing(0.04f);
+        GradientDrawable gd = new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                new int[]{0xF26E9BFF, 0xF27A5CF6});
         gd.setShape(GradientDrawable.OVAL);
-        gd.setStroke(dp(2), 0xFF3DDC2E);
+        gd.setStroke(dp(2), 0x66FFFFFF);
         ball.setBackground(gd);
         ball.setElevation(dp(6)); // 圆形背景自带轮廓阴影
         ball.setTypeface(null, android.graphics.Typeface.BOLD);
