@@ -622,10 +622,10 @@
         var s = document.createElement('style');
         s.textContent = [
             '#rm-toasts{position:fixed;left:0;right:0;bottom:24px;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;z-index:2147483647!important}',
-            '.rm-toast{padding:8px 14px;border-radius:10px;background:rgba(27,31,42,.96);border:1px solid #272c39;color:#eaecf3;font-size:13px;box-shadow:0 6px 22px rgba(0,0,0,.5);opacity:1;transition:opacity .18s,transform .18s;max-width:80vw;pointer-events:none;animation:rmtoast .18s ease-out}',
-            '.rm-toast.ok{border-color:rgba(34,197,94,.5);color:#22c55e}',
-            '.rm-toast.err{border-color:rgba(239,68,68,.5);color:#ef4444}',
-            '.rm-toast.warn{border-color:rgba(245,158,11,.5);color:#f59e0b}',
+            '.rm-toast{padding:9px 16px;border-radius:12px;background:rgba(30,30,34,.97);border:1px solid rgba(255,255,255,.08);color:#f4f4f5;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:1;transition:opacity .18s,transform .18s;max-width:80vw;pointer-events:none;animation:rmtoast .18s ease-out}',
+            '.rm-toast.ok{border-color:rgba(242,179,61,.35)}',
+            '.rm-toast.err{border-color:rgba(242,115,115,.45);color:#f78d8d}',
+            '.rm-toast.warn{color:#ffd27a}',
             '.rm-toast.out{opacity:0;transform:translateY(8px)}',
             '@keyframes rmtoast{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}'
         ].join('\n');
@@ -641,7 +641,7 @@
         while (toastHost.childNodes.length >= 3) toastHost.removeChild(toastHost.firstChild);
         var t = document.createElement('div');
         t.className = 'rm-toast' + (type ? ' ' + type : '');
-        t.textContent = (type === 'ok' ? '✓ ' : type === 'err' ? '✕ ' : type === 'warn' ? '⚠ ' : '') + msg;
+        t.textContent = (type === 'err' ? '✕ ' : type === 'warn' ? '! ' : '') + msg;
         toastHost.appendChild(t);
         setTimeout(function () { t.classList.add('out'); }, 1800);
         setTimeout(function () { if (t.parentNode) t.parentNode.removeChild(t); }, 2100);
@@ -910,24 +910,27 @@
         /* ==================== 主题（仿 RMCH dark） ==================== */
         var themeOverrides = {
             common: {
-                fontSize: '13px', borderRadius: '8px', borderRadiusSmall: '6px',
-                primaryColor: '#5b8cff', primaryColorHover: '#7aa4ff', primaryColorPressed: '#4571e0',
-                infoColor: '#8b5cf6', infoColorHover: '#a17ff8', infoColorPressed: '#7442e4',
-                successColor: '#22c55e', successColorHover: '#3dd47a', successColorPressed: '#17a84c',
-                warningColor: '#f59e0b', warningColorHover: '#fbb42a', warningColorPressed: '#d98706',
-                errorColor: '#ef4444', errorColorHover: '#f76a6a', errorColorPressed: '#d93030',
-                bodyColor: '#0d1016', cardColor: '#141922', modalColor: '#141922', popoverColor: '#1a202b',
-                tableColor: '#141922', tableColorHover: 'rgba(91,140,255,0.08)', tableHeaderColor: '#171c26',
-                inputColor: '#10141b', inputColorDisabled: '#141821', actionColor: '#1a202b',
-                hoverColor: 'rgba(91,140,255,0.11)', borderColor: '#252c3a', dividerColor: '#222936',
-                textColorBase: '#e9ecf3', textColor1: '#f4f6fb', textColor2: '#b7becd', textColor3: '#7d8699',
-                placeholderColor: '#566074', closeIconColor: '#7d8699',
-                boxShadow2: '0 6px 22px rgba(0,0,0,0.5)', boxShadow3: '0 10px 34px rgba(0,0,0,0.58)'
+                fontSize: '13px', borderRadius: '9px', borderRadiusSmall: '7px',
+                primaryColor: '#f2b33d', primaryColorHover: '#ffc65c', primaryColorPressed: '#d99a22', primaryColorSuppl: '#f2b33d',
+                infoColor: '#8b8b94', infoColorHover: '#a3a3ab', infoColorPressed: '#74747c',
+                successColor: '#f2b33d', successColorHover: '#ffc65c', successColorPressed: '#d99a22',
+                warningColor: '#f2b33d', warningColorHover: '#ffc65c', warningColorPressed: '#d99a22',
+                errorColor: '#f27373', errorColorHover: '#f78d8d', errorColorPressed: '#d95c5c',
+                bodyColor: '#131316', cardColor: '#1b1b1f', modalColor: '#1b1b1f', popoverColor: '#232328',
+                tableColor: '#1b1b1f', tableColorHover: 'rgba(242,179,61,0.06)', tableHeaderColor: '#1b1b1f',
+                inputColor: '#232328', inputColorDisabled: '#1b1b1f', actionColor: '#232328',
+                hoverColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.08)', dividerColor: 'rgba(255,255,255,0.06)',
+                textColorBase: '#f4f4f5', textColor1: '#f4f4f5', textColor2: '#c8c8ce', textColor3: '#8b8b94',
+                placeholderColor: '#5f5f68', closeIconColor: '#8b8b94', closeColorHover: 'rgba(255,255,255,0.06)',
+                boxShadow2: '0 8px 24px rgba(0,0,0,0.5)', boxShadow3: '0 12px 36px rgba(0,0,0,0.6)'
             },
-            Card: { paddingMedium: '16px 18px 18px', titleFontSizeMedium: '15px', borderRadius: '16px', borderColor: '#2f3747' },
-            DataTable: { thPaddingSmall: '7px 10px', tdPaddingSmall: '6px 10px', thFontWeight: '500', borderRadius: '0', tdColorHover: 'rgba(91,140,255,0.08)' },
-            Dialog: { borderRadius: '16px', color: '#141922' },
-            Tag: { borderRadius: '6px' }, Button: { fontWeight: '500' }
+            Card: { paddingMedium: '16px 18px 18px', titleFontSizeMedium: '16px', borderRadius: '18px', borderColor: 'rgba(255,255,255,0.08)' },
+            DataTable: { thPaddingSmall: '8px 12px', tdPaddingSmall: '7px 12px', thFontWeight: '500', borderRadius: '0',
+                         borderColor: 'rgba(255,255,255,0.045)', tdColor: '#1b1b1f', thColor: '#1b1b1f', tdColorHover: 'rgba(242,179,61,0.06)' },
+            Dialog: { borderRadius: '18px', color: '#1b1b1f', iconColorWarning: '#f2b33d' },
+            Button: { fontWeight: '550', textColorPrimary: '#1c1405', textColorHoverPrimary: '#1c1405', textColorPressedPrimary: '#1c1405', textColorFocusPrimary: '#1c1405',
+                      textColorWarning: '#1c1405', textColorHoverWarning: '#1c1405', textColorPressedWarning: '#1c1405', textColorFocusWarning: '#1c1405' },
+            Input: { border: '1px solid transparent' }
         };
 
         /* ==================== 数据定义 ==================== */
@@ -965,30 +968,30 @@
             { key: 'lockmpval', label: 'MP', step: 100 },
             { key: 'locktpval', label: 'TP', step: 10 }
         ];
-        // 快捷操作分组；tone: 图标配色；battle: 仅战斗中可用；confirm: 执行前二次确认
+        // 快捷操作分组；tone: 图标配色（acc 金 / red 危险 / plain 中性）；battle: 仅战斗中可用；confirm: 执行前二次确认
         var QUICK_GROUPS = [
             { title: '战斗', items: [
-                { label: '全队回满', act: 'recover', tone: 'green', icon: 'heart' },
+                { label: '全队回满', act: 'recover', tone: 'acc', icon: 'heart' },
                 { label: '全灭敌人', act: 'kill', tone: 'red', icon: 'sword', battle: true },
-                { label: '逃离战斗', act: 'escape', tone: 'amber', icon: 'logout', battle: true }
+                { label: '逃离战斗', act: 'escape', tone: 'plain', icon: 'logout', battle: true }
             ] },
             { title: '物资', items: [
-                { label: '全物品 ×99', act: 'allitems', tone: 'blue', icon: 'box' },
-                { label: '全武器 ×99', act: 'allweapons', tone: 'blue', icon: 'sword' },
-                { label: '全防具 ×99', act: 'allarmors', tone: 'blue', icon: 'shield' }
+                { label: '全物品 ×99', act: 'allitems', tone: 'plain', icon: 'box' },
+                { label: '全武器 ×99', act: 'allweapons', tone: 'plain', icon: 'sword' },
+                { label: '全防具 ×99', act: 'allarmors', tone: 'plain', icon: 'shield' }
             ] },
             { title: '存档', items: [
-                { label: '存档 槽1', act: 'save', tone: 'blue', icon: 'save' },
-                { label: '读档 槽1', act: 'load', tone: 'violet', icon: 'archive', confirm: '读取槽 1 存档？当前未保存的进度会丢失。' },
-                { label: '新游戏', act: 'newgame', tone: 'amber', icon: 'plus', confirm: '开始新游戏？当前未保存的进度会丢失。' },
-                { label: '回标题', act: 'title', tone: 'gray', icon: 'home', confirm: '返回标题画面？当前未保存的进度会丢失。' }
+                { label: '存档 槽1', act: 'save', tone: 'acc', icon: 'save' },
+                { label: '读档 槽1', act: 'load', tone: 'plain', icon: 'archive', confirm: '读取槽 1 存档？当前未保存的进度会丢失。' },
+                { label: '新游戏', act: 'newgame', tone: 'red', icon: 'plus', confirm: '开始新游戏？当前未保存的进度会丢失。' },
+                { label: '回标题', act: 'title', tone: 'red', icon: 'home', confirm: '返回标题画面？当前未保存的进度会丢失。' }
             ] },
             { title: '卡死修复', items: [
-                { label: '恢复画面', act: 'fadein', tone: 'gray', icon: 'sun' },
-                { label: '清除图片', act: 'clearpics', tone: 'gray', icon: 'image' },
-                { label: '中止事件', act: 'clearevent', tone: 'gray', icon: 'stop', confirm: '强制中止当前运行的事件？仅在剧情卡死时使用。' },
-                { label: '解除强制移动', act: 'clearmove', tone: 'gray', icon: 'nav' },
-                { label: '返回地图', act: 'tomap', tone: 'gray', icon: 'map' }
+                { label: '恢复画面', act: 'fadein', tone: 'plain', icon: 'sun' },
+                { label: '清除图片', act: 'clearpics', tone: 'plain', icon: 'image' },
+                { label: '中止事件', act: 'clearevent', tone: 'plain', icon: 'stop', confirm: '强制中止当前运行的事件？仅在剧情卡死时使用。' },
+                { label: '解除移动', act: 'clearmove', tone: 'plain', icon: 'nav' },
+                { label: '返回地图', act: 'tomap', tone: 'plain', icon: 'map' }
             ] }
         ];
 
@@ -1359,110 +1362,99 @@
 
               <!-- 面板 -->
               <div v-if="show" class="rm-panel">
-                <!-- 头部：标识 + 标题 + 页签（分段控件）+ 关闭；页签并入头部省一整行，横屏手机高度有限 -->
+                <!-- 头部：标识 + 游戏名 | 下划线页签 | 关闭 -->
                 <div class="rm-head">
-                  <div class="rm-logo"><MIcon name="zap" :size="16"/></div>
-                  <div class="rm-title">
-                    <div class="rm-t1">{{ GAME_NAME }}</div>
-                    <div class="rm-t2">MOD 修改器 · {{ MOD_VER }}</div>
-                  </div>
-                  <div class="rm-tabs" role="tablist">
-                    <div class="rm-tab" :class="{act: tab==='trainer'}" role="tab" @click="setTab('trainer')"><MIcon name="sliders" :size="13"/>修改器</div>
-                    <div class="rm-tab" :class="{act: tab==='data'}" role="tab" @click="setTab('data')"><MIcon name="database" :size="13"/>数据</div>
-                  </div>
-                  <div class="rm-iconbtn" role="button" aria-label="关闭" @click="showPanel(false)"><MIcon name="close" :size="17"/></div>
+                  <span class="rm-mark">MOD</span>
+                  <span class="rm-name">{{ GAME_NAME }}</span>
+                  <nav class="rm-nav" role="tablist">
+                    <span class="rm-navi" :class="{act: tab==='trainer'}" role="tab" @click="setTab('trainer')">修改器</span>
+                    <span class="rm-navi" :class="{act: tab==='data'}" role="tab" @click="setTab('data')">数据</span>
+                  </nav>
+                  <span class="rm-x" role="button" aria-label="关闭" @click="showPanel(false)"><MIcon name="close" :size="16"/></span>
                 </div>
 
-                <!-- 状态条 -->
-                <div class="rm-strip">
-                  <span v-if="status.battle" class="rm-st red"><MIcon name="sword" :size="12"/>战斗中</span>
-                  <span v-else-if="status.scene==='标题画面'" class="rm-st violet"><MIcon name="home" :size="12"/>标题</span>
-                  <span v-else-if="status.scene==='地图'" class="rm-st green"><MIcon name="map" :size="12"/>地图</span>
-                  <span v-else-if="status.scene" class="rm-st">{{ status.scene }}</span>
-                  <span v-if="status.map" class="rm-st name"><MIcon name="flag" :size="12"/>{{ status.map }}</span>
-                  <span v-if="status.gold" class="rm-st amber"><MIcon name="coins" :size="12"/>{{ status.gold }}</span>
-                  <span v-if="status.party" class="rm-st"><MIcon name="users" :size="12"/>{{ status.party }} 人</span>
-                  <span v-if="activeCount" class="rm-badge"><i></i>{{ activeCount }} 项生效</span>
+                <!-- 状态行：纯文本 + 分隔点 -->
+                <div class="rm-status">
+                  <span v-if="status.battle" class="rm-sc red">战斗中</span>
+                  <span v-else-if="status.scene==='标题画面'" class="rm-sc">标题画面</span>
+                  <span v-else-if="status.scene" class="rm-sc">{{ status.scene }}</span>
+                  <span v-if="status.map" class="rm-si name">{{ status.map }}</span>
+                  <span v-if="status.gold" class="rm-si"><MIcon name="coins" :size="11"/>{{ status.gold }}</span>
+                  <span v-if="status.party" class="rm-si">{{ status.party }} 人</span>
+                  <span v-if="activeCount" class="rm-live">{{ activeCount }} 项生效</span>
                 </div>
 
                 <!-- body -->
                 <div class="rm-body">
                   <!-- ===== 修改器 ===== -->
                   <template v-if="tab==='trainer'">
-                    <section class="rm-sec">
-                      <div class="rm-sec-h">
-                        <span class="rm-sec-t"><MIcon name="shield" :size="14"/>作弊开关</span>
-                        <span v-if="activeCount" class="rm-link red" role="button" @click="allOff">全部关闭</span>
-                      </div>
-                      <template v-for="g in CHEAT_GROUPS" :key="g.name">
-                        <div class="rm-grp">{{ g.title }}<em v-if="groupOn(g)">{{ groupOn(g) }}</em></div>
-                        <div class="rm-tiles">
-                          <div v-for="c in g.items" :key="c.key" class="rm-tile" :class="{on: state[c.key]}" role="switch" :aria-checked="!!state[c.key]" @click="toggleCheat(c.key)">
-                            <span class="rm-tile-ic"><MIcon :name="c.icon" :size="15"/></span>
-                            <span class="rm-tile-tx"><b>{{ c.label }}</b><small>{{ cheatDesc(c) }}</small></span>
-                          </div>
+                    <div class="rm-h">
+                      <span>作弊开关</span>
+                      <span v-if="activeCount" class="rm-hl" role="button" @click="allOff">全部关闭</span>
+                    </div>
+                    <div v-for="g in CHEAT_GROUPS" :key="g.name" class="rm-grp">
+                      <div class="rm-gt">{{ g.title }}</div>
+                      <div class="rm-opts">
+                        <div v-for="c in g.items" :key="c.key" class="rm-opt" :class="{on: state[c.key]}" role="switch" :aria-checked="!!state[c.key]" @click="toggleCheat(c.key)">
+                          <span class="rm-opt-tx"><b>{{ c.label }}</b><small>{{ cheatDesc(c) }}</small></span>
+                          <span class="rm-sw"></span>
                         </div>
-                      </template>
-                      <div class="rm-locks">
-                        <label v-for="r in LOCKS" :key="r.key" class="rm-lock">
+                      </div>
+                      <div v-if="g.name==='lock'" class="rm-locks">
+                        <label v-for="r in LOCKS" :key="r.key" class="rm-field">
                           <span>{{ r.label }}</span>
                           <n-input-number size="small" :value="Number(state[r.key]) || null" :min="0" :step="r.step" :show-button="false" placeholder="满" @update:value="v => setLock(r.key, v)"/>
                         </label>
                       </div>
-                      <div class="rm-hint">锁定值留空 = 锁满（不会超过上限），需打开对应的"锁 HP / MP / TP"。</div>
-                    </section>
+                    </div>
+                    <div class="rm-note">锁定值留空即锁满，不会超过上限。</div>
 
-                    <section class="rm-sec">
-                      <div class="rm-sec-h">
-                        <span class="rm-sec-t"><MIcon name="activity" :size="14"/>倍率</span>
-                        <span class="rm-link" role="button" @click="resetRates">全部重置</span>
+                    <div class="rm-h">
+                      <span>倍率</span>
+                      <span class="rm-hl" role="button" @click="resetRates">重置</span>
+                    </div>
+                    <div v-for="r in RATES" :key="r.key" class="rm-rate">
+                      <div class="rm-rate-h">
+                        <span>{{ r.label }}</span>
+                        <b :class="{on: rateChanged(r)}">{{ rateText(r) }}</b>
                       </div>
-                      <div v-for="r in RATES" :key="r.key" class="rm-rate">
-                        <div class="rm-rate-h">
-                          <span class="rm-rate-l"><MIcon :name="r.icon" :size="14"/>{{ r.label }}</span>
-                          <span class="rm-rate-v" :class="{on: rateChanged(r)}">{{ rateText(r) }}</span>
+                      <div class="rm-rate-c">
+                        <div class="rm-seg">
+                          <span v-for="p in r.presets" :key="p" class="rm-segi" :class="{act: Number(state[r.key])===p}" role="button" @click="setNum(r.key, p)">{{ rateText(r, p) }}</span>
                         </div>
-                        <div class="rm-chips">
-                          <span v-for="p in r.presets" :key="p" class="rm-chip" :class="{act: Number(state[r.key])===p}" role="button" @click="setNum(r.key, p)">{{ rateText(r, p) }}</span>
-                          <n-input-number v-if="r.custom" size="tiny" class="rm-chip-in" :class="{act: rateIsCustom(r)}" :value="rateIsCustom(r) ? Number(state[r.key]) : null"
-                                          :min="1" :max="100" :show-button="false" placeholder="自定义" @update:value="v => setNum(r.key, v)"/>
-                        </div>
+                        <n-input-number v-if="r.custom" size="small" class="rm-cust" :class="{act: rateIsCustom(r)}" :value="rateIsCustom(r) ? Number(state[r.key]) : null"
+                                        :min="1" :max="100" :show-button="false" placeholder="自定" @update:value="v => setNum(r.key, v)"/>
                       </div>
-                    </section>
+                    </div>
 
-                    <section class="rm-sec">
-                      <div class="rm-sec-h"><span class="rm-sec-t"><MIcon name="zap" :size="14"/>快捷操作</span></div>
-                      <div class="rm-gold">
-                        <span class="rm-gold-ic"><MIcon name="coins" :size="15"/></span>
-                        <n-input-number v-model:value="goldDraft" :min="0" size="small" :show-button="false" placeholder="金额" style="flex:1;min-width:0;"/>
-                        <n-button size="small" type="warning" secondary @click="goldOp('add')">增加</n-button>
-                        <n-button size="small" secondary @click="goldOp('set')">设为</n-button>
-                      </div>
-                      <template v-for="g in QUICK_GROUPS" :key="g.title">
-                        <div class="rm-grp">{{ g.title }}</div>
-                        <div class="rm-acts">
-                          <div v-for="a in g.items" :key="a.act" class="rm-act" :class="['t-' + a.tone, {dis: a.battle && !status.battle}]" role="button" @click="quick(a)">
-                            <span class="rm-act-ic"><MIcon :name="a.icon" :size="15"/></span>
-                            <span class="rm-act-tx">{{ a.label }}</span>
-                          </div>
+                    <div class="rm-h"><span>快捷操作</span></div>
+                    <div class="rm-gold">
+                      <MIcon name="coins" :size="15"/>
+                      <n-input-number v-model:value="goldDraft" :min="0" size="small" :show-button="false" placeholder="金额" style="flex:1;min-width:0;"/>
+                      <span class="rm-btn acc" role="button" @click="goldOp('add')">增加</span>
+                      <span class="rm-btn" role="button" @click="goldOp('set')">设为</span>
+                    </div>
+                    <div v-for="g in QUICK_GROUPS" :key="g.title" class="rm-grp">
+                      <div class="rm-gt">{{ g.title }}</div>
+                      <div class="rm-acts">
+                        <div v-for="a in g.items" :key="a.act" class="rm-act" :class="['t-' + a.tone, {dis: a.battle && !status.battle}]" role="button" @click="quick(a)">
+                          <MIcon :name="a.icon" :size="15"/><span>{{ a.label }}</span>
                         </div>
-                      </template>
-                    </section>
+                      </div>
+                    </div>
                   </template>
 
                   <!-- ===== 游戏数据 ===== -->
                   <template v-else>
                     <div class="rm-kinds">
-                      <span v-for="k in KIND_ORDER" :key="k" class="rm-kind" :class="{act: dataKind===k}" role="tab" @click="setKind(k)">
-                        <MIcon :name="KIND_ICONS[k]" :size="13"/>{{ KIND_LABELS[k] }}
-                      </span>
+                      <span v-for="k in KIND_ORDER" :key="k" class="rm-kind" :class="{act: dataKind===k}" role="tab" @click="setKind(k)">{{ KIND_LABELS[k] }}</span>
                     </div>
                     <div class="rm-search">
                       <n-input v-model:value="dataQuery" size="small" clearable :placeholder="'搜索' + KIND_LABELS[dataKind] + '名称或 ID'" style="flex:1;min-width:0;">
                         <template #prefix><MIcon name="search" :size="14"/></template>
                         <template #suffix><span class="rm-count">{{ filtered.length }}<template v-if="dataQuery">/{{ allEntries.length }}</template></span></template>
                       </n-input>
-                      <div class="rm-iconbtn sq" role="button" aria-label="刷新" @click="refreshList"><MIcon name="refresh" :size="15"/></div>
+                      <span class="rm-btn sq" role="button" aria-label="刷新" @click="refreshList"><MIcon name="refresh" :size="14"/></span>
                     </div>
                     <div class="rm-table fill" ref="tableBox">
                       <n-data-table :columns="columns" :data="filtered" size="small" :bordered="false" :max-height="tableMaxH"
@@ -1474,96 +1466,90 @@
               </div>
 
               <!-- 详情 modal -->
-              <n-modal :show="detailShow" @update:show="v => { if(!v) closeDetail(); }" preset="card" :mask-closable="true" class="rm-modal" style="width:400px;max-width:calc(100vw - 24px);">
+              <n-modal :show="detailShow" @update:show="v => { if(!v) closeDetail(); }" preset="card" :mask-closable="true" class="rm-modal" style="width:380px;max-width:calc(100vw - 24px);">
                 <template #header>
                   <span class="rm-mh">
                     <img v-if="detail && iconSrc(detail.icon)" :src="iconSrc(detail.icon)" class="rm-mh-img"/>
-                    <span v-else class="rm-mh-ic"><MIcon :name="detailKindIcon" :size="15"/></span>
-                    <span class="rm-mh-tx"><small>{{ KIND_LABELS[selectedKind] }} #{{ detail && detail.id }}</small>{{ detail && detail.name }}</span>
+                    <span class="rm-mh-tx"><small>{{ KIND_LABELS[selectedKind] }} · #{{ detail && detail.id }}</small>{{ detail && detail.name }}</span>
                   </span>
                 </template>
 
                 <template v-if="detail">
                   <!-- 物品 / 武器 / 防具 -->
                   <div v-if="selectedKind==='item'||selectedKind==='weapon'||selectedKind==='armor'" class="rm-dl">
-                    <div class="rm-stats"><div><small>当前持有</small><b>{{ detail.count != null ? detail.count : detail.value }}</b></div></div>
-                    <div class="rm-sub">快速增减</div>
-                    <div class="rm-chips">
-                      <span class="rm-chip pos" role="button" @click="doSetItem('add', 1)">+1</span>
-                      <span class="rm-chip pos" role="button" @click="doSetItem('add', 10)">+10</span>
-                      <span class="rm-chip pos" role="button" @click="doSetItem('add', 99)">+99</span>
-                      <span class="rm-chip" role="button" @click="doSetItem('add', -1)">-1</span>
-                      <span class="rm-chip neg" role="button" @click="doSetItem('clear')">清零</span>
+                    <div class="rm-kv"><span>当前持有</span><b>{{ detail.count != null ? detail.count : detail.value }}</b></div>
+                    <div class="rm-seg big">
+                      <span class="rm-segi" role="button" @click="doSetItem('add', -1)">−1</span>
+                      <span class="rm-segi" role="button" @click="doSetItem('add', 1)">+1</span>
+                      <span class="rm-segi" role="button" @click="doSetItem('add', 10)">+10</span>
+                      <span class="rm-segi" role="button" @click="doSetItem('add', 99)">+99</span>
+                      <span class="rm-segi neg" role="button" @click="doSetItem('clear')">清零</span>
                     </div>
-                    <div class="rm-sub">设为指定数量</div>
                     <div class="rm-row">
-                      <n-input-number v-model:value="detailValue" :min="0" size="small" style="flex:1;min-width:0;" :show-button="false"/>
-                      <n-button size="small" type="primary" @click="doSetItem('set')">设为</n-button>
+                      <n-input-number v-model:value="detailValue" :min="0" size="small" style="flex:1;min-width:0;" :show-button="false" placeholder="指定数量"/>
+                      <span class="rm-btn acc" role="button" @click="doSetItem('set')">设为</span>
                     </div>
                   </div>
 
                   <!-- 角色 -->
                   <div v-else-if="selectedKind==='actor'" class="rm-dl">
-                    <div class="rm-stats">
-                      <div><small>状态</small><b :class="{ok: detail.inParty}">{{ detail.inParty ? '在队' : '未在队' }}</b></div>
-                      <div><small>等级</small><b>{{ actorInfo ? 'Lv' + actorInfo.level : '—' }}</b></div>
-                      <div v-if="actorInfo"><small>HP</small><b>{{ actorInfo.hp }}</b></div>
-                      <div v-if="actorInfo"><small>MP</small><b>{{ actorInfo.mp }}</b></div>
+                    <div class="rm-kvs">
+                      <div class="rm-kv"><span>状态</span><b :class="{acc: detail.inParty}">{{ detail.inParty ? '在队' : '未在队' }}</b></div>
+                      <div class="rm-kv"><span>等级</span><b>{{ actorInfo ? actorInfo.level : '—' }}</b></div>
+                      <div v-if="actorInfo" class="rm-kv"><span>HP</span><b>{{ actorInfo.hp }}</b></div>
+                      <div v-if="actorInfo" class="rm-kv"><span>MP</span><b>{{ actorInfo.mp }}</b></div>
                     </div>
                     <div class="rm-row">
-                      <n-button size="small" :type="detail.inParty ? 'error':'primary'" secondary @click="doActorParty" style="flex:1;">{{ detail.inParty ? '离队':'入队' }}</n-button>
-                      <n-button size="small" type="success" secondary @click="doActorRecover" style="flex:1;">全恢复</n-button>
-                      <n-button size="small" secondary @click="openSkillPicker" style="flex:1;">技能管理</n-button>
+                      <span class="rm-btn" :class="detail.inParty ? 'neg' : 'acc'" role="button" style="flex:1;" @click="doActorParty">{{ detail.inParty ? '离队':'入队' }}</span>
+                      <span class="rm-btn" role="button" style="flex:1;" @click="doActorRecover">全恢复</span>
+                      <span class="rm-btn" role="button" style="flex:1;" @click="openSkillPicker">技能</span>
                     </div>
-                    <div class="rm-sub">等级{{ actorInfo ? '（上限 ' + actorInfo.maxLevel + '）' : '' }}</div>
                     <div class="rm-row">
-                      <n-input-number v-model:value="levelDraft" :min="1" :max="actorInfo ? actorInfo.maxLevel : undefined" size="small" style="flex:1;min-width:0;" :show-button="false"/>
-                      <n-button size="small" type="primary" @click="doSetLevel">设等级</n-button>
+                      <n-input-number v-model:value="levelDraft" :min="1" :max="actorInfo ? actorInfo.maxLevel : undefined" size="small" style="flex:1;min-width:0;" :show-button="false" :placeholder="'等级 1~' + (actorInfo ? actorInfo.maxLevel : 99)"/>
+                      <span class="rm-btn acc" role="button" @click="doSetLevel">设等级</span>
                     </div>
                   </div>
 
                   <!-- 地图 -->
                   <div v-else-if="selectedKind==='map'" class="rm-dl">
-                    <div class="rm-sub">目标坐标</div>
                     <div class="rm-row">
-                      <span class="rm-axis">X</span><n-input-number v-model:value="detailX" :min="0" size="small" style="flex:1;min-width:0;" :show-button="false"/>
-                      <span class="rm-axis">Y</span><n-input-number v-model:value="detailY" :min="0" size="small" style="flex:1;min-width:0;" :show-button="false"/>
+                      <label class="rm-field"><span>X</span><n-input-number v-model:value="detailX" :min="0" size="small" :show-button="false"/></label>
+                      <label class="rm-field"><span>Y</span><n-input-number v-model:value="detailY" :min="0" size="small" :show-button="false"/></label>
                     </div>
-                    <n-button type="primary" block @click="doTransfer"><template #icon><MIcon name="nav" :size="14"/></template>传送到此地图</n-button>
-                    <div class="rm-hint">默认填入当前坐标；目标格不可通行时可配合"穿墙"走出。</div>
+                    <span class="rm-btn acc wide" role="button" @click="doTransfer">传送到此地图</span>
+                    <div class="rm-note">默认填入当前坐标；目标格不可通行时可配合"穿墙"走出。</div>
                   </div>
 
                   <!-- 开关 -->
                   <div v-else-if="selectedKind==='switch'" class="rm-dl">
-                    <div class="rm-tile wide" :class="{on: detail.value==='ON'}" role="switch" @click="doSetSwitch(detail.value!=='ON')">
-                      <span class="rm-tile-ic"><MIcon name="flag" :size="15"/></span>
-                      <span class="rm-tile-tx"><b>{{ detail.value==='ON' ? '已开启' : '已关闭' }}</b><small>点击切换</small></span>
-                      <span class="rm-tog"></span>
+                    <div class="rm-opt wide" :class="{on: detail.value==='ON'}" role="switch" @click="doSetSwitch(detail.value!=='ON')">
+                      <span class="rm-opt-tx"><b>{{ detail.value==='ON' ? '已开启' : '已关闭' }}</b><small>点击切换</small></span>
+                      <span class="rm-sw"></span>
                     </div>
-                    <div class="rm-hint warn">开关控制剧情/事件进度，随意修改可能导致流程异常，建议先存档。</div>
+                    <div class="rm-note warn">开关控制剧情与事件进度，修改前建议先存档。</div>
                   </div>
 
                   <!-- 变量 -->
                   <div v-else-if="selectedKind==='variable'" class="rm-dl">
-                    <div class="rm-stats"><div><small>当前值</small><b>{{ String(detail.value) }}</b></div></div>
+                    <div class="rm-kv"><span>当前值</span><b>{{ String(detail.value) }}</b></div>
                     <div class="rm-row">
                       <n-input v-model:value="varDraft" size="small" placeholder="数字或文本" style="flex:1;min-width:0;"/>
-                      <n-button size="small" type="primary" @click="doSetVar">设置</n-button>
+                      <span class="rm-btn acc" role="button" @click="doSetVar">设置</span>
                     </div>
                   </div>
                 </template>
               </n-modal>
 
               <!-- 技能 picker modal -->
-              <n-modal :show="skillPickerShow" @update:show="v => { if(!v) closeSkillPicker(); }" preset="card" :mask-closable="true" class="rm-modal" style="width:400px;max-width:calc(100vw - 24px);">
+              <n-modal :show="skillPickerShow" @update:show="v => { if(!v) closeSkillPicker(); }" preset="card" :mask-closable="true" class="rm-modal" style="width:380px;max-width:calc(100vw - 24px);">
                 <template #header>
-                  <span class="rm-mh"><span class="rm-mh-ic"><MIcon name="zap" :size="15"/></span><span class="rm-mh-tx"><small>技能管理</small>{{ detail ? detail.name : '' }}</span></span>
+                  <span class="rm-mh"><span class="rm-mh-tx"><small>技能 · 已学 {{ ownedSkills.length }} 个</small>{{ detail ? detail.name : '' }}</span></span>
                 </template>
                 <div class="rm-dl">
                   <n-input v-model:value="skillQ" size="small" clearable placeholder="搜索技能名称或 ID">
                     <template #prefix><MIcon name="search" :size="14"/></template>
+                    <template #suffix><span class="rm-count">{{ filteredSkills.length }}</span></template>
                   </n-input>
-                  <div class="rm-meta">已学 {{ ownedSkills.length }} 个 · 共 {{ filteredSkills.length }} 条</div>
                   <div class="rm-table">
                     <n-data-table :columns="skillColumns" :data="filteredSkills" size="small" :bordered="false" :max-height="skillTableMaxH"
                                   virtual-scroll :row-key="row => row.id" :pagination="false"/>
@@ -1596,148 +1582,140 @@
                 // 挂载容器里的 n-config-provider 是 fixed+z-index，被游戏清零后会形成 z=0 的堆叠上下文，
                 // 整棵 UI 树（球/面板）都会被压到画布(z=3)之下，所以它本身也必须用 !important 抬高。
                 '#rmmod-ui > .n-config-provider{z-index:99990!important}',
-                // ---- 设计令牌 ----
-                ':root{--rm-bg:#0d1016;--rm-s1:#141922;--rm-s2:#1a202b;--rm-s3:#222936;--rm-bd:#252c3a;--rm-bd2:#2f3747;' +
-                '--rm-tx:#e9ecf3;--rm-tx2:#b7becd;--rm-mut:#7d8699;--rm-fnt:#566074;' +
-                '--rm-acc:#5b8cff;--rm-grn:#22c55e;--rm-amb:#f59e0b;--rm-red:#ef4444;--rm-vio:#8b5cf6}',
-                // ---- 面板骨架 ----
-                '.rm-panel{pointer-events:auto;position:fixed;top:8px;right:8px;bottom:8px;width:420px;max-width:calc(100vw - 16px);display:flex;flex-direction:column;' +
-                'background:var(--rm-bg);border:1px solid var(--rm-bd2);border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.02) inset;overflow:hidden;' +
+                /* ---- 设计令牌：石墨中性色 + 单一金色强调；层级只靠明度区分，不用描边堆叠 ---- */
+                ':root{--rm-bg:#131316;--rm-s1:#1b1b1f;--rm-s2:#232328;--rm-s3:#2e2e34;--rm-line:rgba(255,255,255,.07);' +
+                '--rm-tx:#f4f4f5;--rm-tx2:#c8c8ce;--rm-mut:#8b8b94;--rm-fnt:#5f5f68;' +
+                '--rm-acc:#f2b33d;--rm-acc2:#ffd27a;--rm-accw:rgba(242,179,61,.13);--rm-on:#1c1405;--rm-red:#f27373;--rm-redw:rgba(242,115,115,.13)}',
+                // ---- 面板 ----
+                '.rm-panel{pointer-events:auto;position:fixed;top:8px;right:8px;bottom:8px;width:400px;max-width:calc(100vw - 16px);display:flex;flex-direction:column;' +
+                'background:var(--rm-bg);border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.55);overflow:hidden;' +
                 'z-index:2147483002!important;transform:translate3d(0,0,0);will-change:transform;backface-visibility:hidden;color:var(--rm-tx);font-size:13px;' +
-                '-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;animation:rmx .2s cubic-bezier(.2,.8,.2,1)}',
-                '@keyframes rmx{from{opacity:0;transform:translate3d(14px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}',
+                '-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;animation:rmx .22s cubic-bezier(.2,.8,.2,1)}',
+                '@keyframes rmx{from{opacity:0;transform:translate3d(16px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}',
                 '.rm-panel input{-webkit-user-select:text;user-select:text}',
-                '.rm-head{display:flex;align-items:center;gap:10px;padding:10px 8px 10px 12px;flex:none;background:linear-gradient(160deg,#1a2233 0%,var(--rm-bg) 75%);border-bottom:1px solid var(--rm-bd)}',
-                '.rm-logo{width:32px;height:32px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;' +
-                'background:linear-gradient(135deg,#6e9bff,#7a5cf6);box-shadow:0 4px 14px rgba(91,140,255,.35)}',
-                '.rm-title{min-width:0;flex:1}',
-                '.rm-t1{font-size:14.5px;font-weight:650;color:#f4f6fb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25}',
-                '.rm-t2{font-size:11px;color:var(--rm-mut);margin-top:1px;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-                '.rm-badge{flex:none;margin-left:auto;display:inline-flex;align-items:center;gap:5px;height:22px;font-size:11.5px;color:var(--rm-grn);background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.28);border-radius:99px;padding:0 8px;white-space:nowrap}',
-                '.rm-badge i{width:6px;height:6px;border-radius:50%;background:var(--rm-grn);box-shadow:0 0 6px var(--rm-grn)}',
-                '.rm-iconbtn{flex:none;width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--rm-mut);cursor:pointer;transition:background .15s,color .15s}',
-                '.rm-iconbtn:active{background:var(--rm-s3);color:var(--rm-tx)}',
-                '.rm-iconbtn.sq{background:var(--rm-s2);border:1px solid var(--rm-bd);width:34px;height:30px;border-radius:8px}',
-                // 页签：分段控件
-                '.rm-tabs{display:flex;gap:2px;padding:3px;background:var(--rm-s1);border:1px solid var(--rm-bd);border-radius:10px;flex:none}',
-                '.rm-tab{display:flex;align-items:center;justify-content:center;gap:5px;height:28px;padding:0 11px;border-radius:7px;color:var(--rm-mut);font-weight:550;font-size:12.5px;cursor:pointer;white-space:nowrap;transition:all .18s}',
-                '.rm-tab.act{background:var(--rm-s3);color:#f4f6fb;box-shadow:0 1px 3px rgba(0,0,0,.35)}',
-                '.rm-tab.act svg{color:var(--rm-acc)}',
-                // 状态条：单行，不换行
-                '.rm-strip{display:flex;align-items:center;gap:6px;padding:8px 12px;flex:none;overflow:hidden;border-bottom:1px solid var(--rm-bd);background:#0f131a}',
-                '.rm-strip:empty{display:none}',
-                '.rm-st{flex:none;display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:7px;font-size:11.5px;color:var(--rm-tx2);background:var(--rm-s2);white-space:nowrap;font-variant-numeric:tabular-nums}',
-                '.rm-st.name{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}',
-                '.rm-st.green{color:var(--rm-grn);background:rgba(34,197,94,.1)}.rm-st.red{color:var(--rm-red);background:rgba(239,68,68,.12)}',
-                '.rm-st.amber{color:var(--rm-amb);background:rgba(245,158,11,.1)}.rm-st.violet{color:#a78bfa;background:rgba(139,92,246,.12)}',
-                '.rm-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:12px;display:flex;flex-direction:column;gap:12px}',
-                // ---- 分区 ----
-                '.rm-sec{background:var(--rm-s1);border:1px solid var(--rm-bd);border-radius:13px;padding:12px}',
-                '.rm-sec-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}',
-                '.rm-sec-t{display:flex;align-items:center;gap:7px;font-weight:650;font-size:13.5px;color:#f1f3f8}',
-                '.rm-sec-t svg{color:var(--rm-acc)}',
-                '.rm-link{font-size:12px;color:var(--rm-mut);cursor:pointer;padding:4px 2px}',
-                '.rm-link.red{color:var(--rm-red)}',
-                '.rm-grp{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--rm-mut);margin:12px 0 7px;letter-spacing:.5px}',
-                '.rm-grp em{font-style:normal;font-size:10.5px;color:var(--rm-grn);background:rgba(34,197,94,.12);border-radius:99px;padding:0 6px;line-height:16px}',
-                '.rm-hint{font-size:11.5px;color:var(--rm-fnt);margin-top:8px;line-height:1.5}',
-                '.rm-hint.warn{color:#b98a3a}',
-                '.rm-sub{font-size:11.5px;color:var(--rm-mut);margin:2px 0 -2px}',
-                // ---- 开关卡片 ----
-                // 开关卡片不再放小开关：竖屏两列时卡片仅 ~150px，开关会把名称挤成省略号；开启态由绿色底/图标表达
-                '.rm-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px}',
-                '.rm-tile{display:flex;align-items:center;gap:9px;min-width:0;padding:9px 10px;border-radius:11px;background:var(--rm-s2);border:1px solid var(--rm-bd);cursor:pointer;transition:background .18s,border-color .18s,transform .1s}',
-                '.rm-tile:active{transform:scale(.98)}',
-                '.rm-tile.on{background:linear-gradient(135deg,rgba(34,197,94,.14),rgba(34,197,94,.05));border-color:rgba(34,197,94,.45)}',
-                '.rm-tile-ic{flex:none;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--rm-s3);color:var(--rm-mut);transition:all .18s}',
-                '.rm-tile.on .rm-tile-ic{background:var(--rm-grn);color:#06240f}',
-                '.rm-tile-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}',
-                '.rm-tile-tx b{font-weight:600;font-size:13px;color:var(--rm-tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-                '.rm-tile.on .rm-tile-tx b{color:#f4f6fb}',
-                '.rm-tile-tx small{font-size:11px;color:var(--rm-fnt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-                '.rm-tile.on .rm-tile-tx small{color:#7fbf96}',
-                '.rm-tog{flex:none;position:relative;width:28px;height:16px;border-radius:8px;background:#2c3444;transition:background .18s}',
-                '.rm-tog::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#8790a3;transition:transform .18s,background .18s}',
-                '.rm-tile.on .rm-tog{background:var(--rm-grn)}',
-                '.rm-tile.on .rm-tog::after{transform:translateX(12px);background:#fff}',
-                '.rm-locks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}',
-                '.rm-lock{display:flex;align-items:center;gap:6px;min-width:0;background:var(--rm-s2);border:1px solid var(--rm-bd);border-radius:9px;padding:0 0 0 9px}',
-                '.rm-lock > span{flex:none;font-size:11.5px;color:var(--rm-mut);font-weight:600}',
-                '.rm-lock .n-input-number{flex:1;min-width:0}',
-                '.rm-lock .n-input{--n-color:transparent!important;--n-border:none!important;--n-border-hover:none!important;--n-color-focus:transparent!important}',
-                // ---- 倍率 ----
-                '.rm-rate{padding:10px 0 2px;border-top:1px dashed var(--rm-bd)}',
-                '.rm-sec-h + .rm-rate{border-top:none}',
-                '.rm-rate-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}',
-                '.rm-rate-l{display:flex;align-items:center;gap:6px;color:var(--rm-tx2)}',
-                '.rm-rate-l svg{color:var(--rm-mut)}',
-                '.rm-rate-v{font-size:13px;font-weight:650;color:var(--rm-mut);font-variant-numeric:tabular-nums}',
-                '.rm-rate-v.on{color:var(--rm-amb)}',
-                '.rm-chips{display:flex;gap:6px}',
-                '.rm-chip{flex:1 1 0;min-width:0;display:inline-flex;align-items:center;justify-content:center;height:28px;padding:0 2px;white-space:nowrap;border-radius:8px;background:var(--rm-s2);border:1px solid var(--rm-bd);color:var(--rm-tx2);font-size:12.5px;font-variant-numeric:tabular-nums;cursor:pointer;transition:all .15s}',
-                '.rm-chip:active{transform:scale(.96)}',
-                '.rm-chip.act{background:rgba(91,140,255,.16);border-color:rgba(91,140,255,.6);color:#cfdcff;font-weight:600}',
-                '.rm-chip.pos{color:#7ee2a2}.rm-chip.neg{color:#f58c8c}',
-                '.rm-chip-in{width:70px;flex:none}',
-                '.rm-chip-in.act .n-input{--n-border:1px solid rgba(91,140,255,.6)!important}',
+                // 头部：标识 + 游戏名 + 下划线页签 + 关闭（单行）
+                '.rm-head{display:flex;align-items:center;gap:9px;height:50px;padding:0 6px 0 14px;flex:none;border-bottom:1px solid var(--rm-line)}',
+                '.rm-mark{flex:none;font-size:9.5px;font-weight:800;letter-spacing:.6px;color:var(--rm-on);background:var(--rm-acc);border-radius:5px;padding:3px 5px;line-height:1}',
+                '.rm-name{flex:1;min-width:0;font-size:15px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+                '.rm-nav{flex:none;display:flex;align-self:stretch;gap:16px;margin-right:4px}',
+                '.rm-navi{position:relative;display:flex;align-items:center;font-size:13.5px;color:var(--rm-mut);cursor:pointer;transition:color .15s}',
+                '.rm-navi.act{color:var(--rm-tx);font-weight:600}',
+                '.rm-navi.act::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:2px;background:var(--rm-acc)}',
+                '.rm-x{flex:none;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--rm-mut);cursor:pointer}',
+                '.rm-x:active{background:var(--rm-s2);color:var(--rm-tx)}',
+                // 状态行：纯文本，用分隔点，不用彩色胶囊
+                '.rm-status{display:flex;align-items:center;min-height:32px;padding:0 14px;flex:none;font-size:12px;color:var(--rm-mut);white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}',
+                '.rm-status:empty{display:none}',
+                '.rm-status > span{flex:none;display:inline-flex;align-items:center;gap:3px}',
+                '.rm-status > span + span:not(.rm-live)::before{content:"·";margin:0 7px;color:var(--rm-fnt)}',
+                '.rm-status .name{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;display:inline-block}',
+                '.rm-sc{color:var(--rm-tx2)}.rm-sc.red{color:var(--rm-red)}',
+                '.rm-live{margin-left:auto;padding-left:10px;color:var(--rm-acc)}',
+                '.rm-live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--rm-acc);margin-right:6px;box-shadow:0 0 0 3px var(--rm-accw)}',
+                '.rm-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 14px 16px;display:flex;flex-direction:column}',
+                // ---- 分区标题 ----
+                '.rm-h{display:flex;align-items:center;justify-content:space-between;margin:18px 2px 10px;font-size:13.5px;font-weight:650;flex:none}',
+                '.rm-h:first-child{margin-top:12px}',
+                '.rm-hl{font-size:12px;font-weight:400;color:var(--rm-mut);cursor:pointer;padding:4px 0}',
+                '.rm-grp{margin-bottom:12px;flex:none}',
+                '.rm-gt{font-size:11px;color:var(--rm-mut);letter-spacing:1.5px;margin:0 0 6px 2px}',
+                '.rm-note{font-size:11.5px;color:var(--rm-fnt);margin:-4px 2px 0;line-height:1.5}',
+                '.rm-note.warn{color:#c39a52}',
+                // ---- 开关项：无描边平面卡，开启 = 金色细环 + 金色开关 ----
+                '.rm-opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}',
+                '.rm-opt{display:flex;align-items:center;gap:10px;min-width:0;padding:9px 10px 9px 12px;border-radius:11px;background:var(--rm-s1);cursor:pointer;transition:background .15s,box-shadow .15s}',
+                '.rm-opt:active{background:var(--rm-s2)}',
+                '.rm-opt.on{background:rgba(242,179,61,.09);box-shadow:inset 0 0 0 1px rgba(242,179,61,.32)}',
+                '.rm-opt-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}',
+                '.rm-opt-tx b{font-weight:600;font-size:13px;color:var(--rm-tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+                '.rm-opt.on .rm-opt-tx b{color:var(--rm-tx)}',
+                '.rm-opt-tx small{font-size:11px;color:var(--rm-fnt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+                '.rm-opt.on .rm-opt-tx small{color:#b8955a}',
+                '.rm-sw{flex:none;position:relative;width:30px;height:18px;border-radius:9px;background:var(--rm-s3);transition:background .18s}',
+                '.rm-sw::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#8b8b94;transition:transform .18s cubic-bezier(.3,.7,.3,1),background .18s}',
+                '.rm-opt.on .rm-sw{background:var(--rm-acc)}',
+                '.rm-opt.on .rm-sw::after{transform:translateX(12px);background:#fff}',
+                '.rm-opt.wide{padding:12px 14px;background:var(--rm-s2)}',
+                // ---- 输入小格（锁定值 / 坐标） ----
+                '.rm-locks{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}',
+                '.rm-field{flex:1;display:flex;align-items:center;gap:4px;min-width:0;background:var(--rm-s1);border-radius:9px;padding-left:10px}',
+                '.rm-field > span{flex:none;font-size:11.5px;font-weight:600;color:var(--rm-mut)}',
+                '.rm-field .n-input-number{flex:1;min-width:0}',
+                '.rm-gold .n-input{--n-height:32px!important}',
+                '.rm-field .n-input,.rm-gold .n-input{--n-color:transparent!important;--n-color-focus:transparent!important;--n-border:none!important;--n-border-hover:none!important;--n-border-focus:none!important;--n-box-shadow-focus:none!important}',
+                // ---- 倍率：分段控件 ----
+                '.rm-rate{margin-bottom:12px;flex:none}',
+                '.rm-rate-h{display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 6px;font-size:12.5px;color:var(--rm-tx2)}',
+                '.rm-rate-h b{font-size:13px;font-weight:650;color:var(--rm-fnt);font-variant-numeric:tabular-nums}',
+                '.rm-rate-h b.on{color:var(--rm-acc)}',
+                '.rm-rate-c{display:flex;align-items:center;gap:6px}',
+                '.rm-seg{flex:1;min-width:0;display:flex;gap:2px;padding:3px;background:var(--rm-s1);border-radius:10px}',
+                '.rm-segi{flex:1 1 0;min-width:0;height:28px;display:flex;align-items:center;justify-content:center;border-radius:7px;font-size:12.5px;color:var(--rm-mut);font-variant-numeric:tabular-nums;white-space:nowrap;cursor:pointer;transition:background .15s,color .15s}',
+                '.rm-segi:active{background:var(--rm-s2);color:var(--rm-tx)}',
+                '.rm-segi.act{background:var(--rm-acc);color:var(--rm-on);font-weight:650}',
+                '.rm-seg.big .rm-segi{height:34px;font-size:13.5px;color:var(--rm-tx2)}',
+                '.rm-segi.neg{color:var(--rm-red)}',
+                '.rm-cust{width:62px;flex:none}',
+                '.rm-cust .n-input{--n-color:var(--rm-s1)!important;--n-border:none!important;--n-height:34px!important}',
+                '.rm-cust.act .n-input{--n-text-color:var(--rm-acc)!important;--n-border:1px solid rgba(242,179,61,.55)!important}',
+                // ---- 按钮 ----
+                '.rm-btn{flex:none;display:inline-flex;align-items:center;justify-content:center;height:32px;padding:0 14px;border-radius:9px;background:var(--rm-s2);color:var(--rm-tx2);font-size:13px;font-weight:550;white-space:nowrap;cursor:pointer;transition:background .15s,filter .15s}',
+                '.rm-btn:active{background:var(--rm-s3)}',
+                '.rm-btn.acc{background:var(--rm-acc);color:var(--rm-on)}',
+                '.rm-btn.acc:active{filter:brightness(.9)}',
+                '.rm-btn.neg{background:var(--rm-redw);color:var(--rm-red)}',
+                '.rm-btn.sq{width:34px;padding:0}',
+                '.rm-btn.wide{width:100%;height:38px}',
                 // ---- 快捷操作 ----
-                '.rm-gold{display:flex;align-items:center;gap:8px;margin-top:10px;padding:8px;background:var(--rm-s2);border:1px solid var(--rm-bd);border-radius:11px}',
-                '.rm-gold-ic{flex:none;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--rm-amb);background:rgba(245,158,11,.12)}',
-                '.rm-acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:8px}',
-                '.rm-act{display:flex;align-items:center;gap:8px;min-width:0;padding:7px 8px;border-radius:11px;background:var(--rm-s2);border:1px solid var(--rm-bd);cursor:pointer;transition:background .15s,transform .1s,opacity .15s}',
-                '.rm-act:active{transform:scale(.96);background:var(--rm-s3)}',
-                '.rm-act.dis{opacity:.38}',
-                '.rm-act-ic{flex:none;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center}',
-                '.rm-act-tx{min-width:0;font-size:12.5px;color:var(--rm-tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
-                '.t-green .rm-act-ic{color:var(--rm-grn);background:rgba(34,197,94,.13)}',
-                '.t-red .rm-act-ic{color:var(--rm-red);background:rgba(239,68,68,.13)}',
-                '.t-amber .rm-act-ic{color:var(--rm-amb);background:rgba(245,158,11,.13)}',
-                '.t-blue .rm-act-ic{color:var(--rm-acc);background:rgba(91,140,255,.14)}',
-                '.t-violet .rm-act-ic{color:#a78bfa;background:rgba(139,92,246,.14)}',
-                '.t-gray .rm-act-ic{color:var(--rm-tx2);background:var(--rm-s3)}',
+                '.rm-gold{display:flex;align-items:center;gap:6px;margin-bottom:14px;padding:4px 4px 4px 12px;background:var(--rm-s1);border-radius:11px;color:var(--rm-acc);flex:none}',
+                '.rm-acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px}',
+                '.rm-act{display:flex;align-items:center;gap:8px;min-width:0;height:38px;padding:0 11px;border-radius:10px;background:var(--rm-s1);color:var(--rm-tx2);font-size:12.5px;cursor:pointer;transition:background .15s,opacity .15s}',
+                '.rm-act svg{flex:none;color:var(--rm-mut)}',
+                '.rm-act span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+                '.rm-act:active{background:var(--rm-s2)}',
+                '.rm-act.dis{opacity:.35}',
+                '.rm-act.t-acc svg{color:var(--rm-acc)}',
+                '.rm-act.t-red svg{color:var(--rm-red)}',
                 // ---- 数据页 ----
-                // 分类一行横滑（不换行省高度），隐藏滚动条
-                '.rm-kinds{display:flex;gap:6px;overflow-x:auto;flex:none;margin:0 -12px;padding:0 12px;scrollbar-width:none}',
+                '.rm-kinds{display:flex;gap:4px;overflow-x:auto;flex:none;margin:12px -14px 10px;padding:0 14px;scrollbar-width:none}',
                 '.rm-kinds::-webkit-scrollbar{display:none}',
-                '.rm-kind{flex:none;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:99px;background:var(--rm-s1);border:1px solid var(--rm-bd);color:var(--rm-tx2);font-size:12.5px;cursor:pointer;transition:all .15s}',
-                '.rm-kind svg{color:var(--rm-mut)}',
-                '.rm-kind.act{background:var(--rm-acc);border-color:var(--rm-acc);color:#fff;font-weight:600}',
-                '.rm-kind.act svg{color:#fff}',
-                '.rm-search{display:flex;gap:8px;align-items:center}',
-                '.rm-meta{display:flex;justify-content:space-between;font-size:11.5px;color:var(--rm-mut);margin:-4px 2px}',
-                '.rm-meta span{color:var(--rm-fnt)}',
-                '.rm-table{border:1px solid var(--rm-bd);border-radius:12px;overflow:hidden;background:var(--rm-s1);flex:none}',
-                '.rm-table.fill{flex:1 1 0;min-height:120px}',
-                '.rm-search,.rm-meta{flex:none}',
+                '.rm-kind{flex:none;display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:9px;color:var(--rm-mut);font-size:13px;cursor:pointer;transition:all .15s}',
+                '.rm-kind.act{background:var(--rm-accw);color:var(--rm-acc2);font-weight:600}',
+                '.rm-search{display:flex;gap:6px;align-items:center;flex:none;margin-bottom:10px}',
+                '.rm-search .n-input{--n-color:var(--rm-s1)!important;--n-border:none!important}',
                 '.rm-count{font-size:11.5px;color:var(--rm-fnt);font-variant-numeric:tabular-nums}',
-                '.rm-table .n-data-table-th{font-size:11.5px;color:var(--rm-mut)!important;font-weight:500!important}',
+                '.rm-table{border-radius:12px;overflow:hidden;background:var(--rm-s1);flex:none}',
+                '.rm-table.fill{flex:1 1 0;min-height:120px}',
+                '.rm-table .n-data-table-th{font-size:11.5px;color:var(--rm-fnt)!important;font-weight:500!important}',
                 '.rm-cell-name{display:flex;align-items:baseline;gap:7px;min-width:0}',
                 '.rm-id{flex:none;color:var(--rm-fnt);font-size:11.5px;font-variant-numeric:tabular-nums}',
                 '.rm-nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
                 '.rm-cell-val{display:inline-flex;align-items:center;gap:6px}',
                 '.rm-num{font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--rm-tx2)}',
-                '.rm-num.acc{color:#9db8ff;font-weight:600}.rm-num.dim{color:var(--rm-fnt)}',
-                '.rm-pill{display:inline-block;font-size:10.5px;font-weight:650;line-height:18px;padding:0 7px;border-radius:99px;letter-spacing:.3px}',
-                '.rm-pill.ok{color:var(--rm-grn);background:rgba(34,197,94,.13)}.rm-pill.off{color:var(--rm-mut);background:var(--rm-s3)}',
+                '.rm-num.acc{color:var(--rm-acc);font-weight:600}.rm-num.dim{color:var(--rm-fnt)}',
+                '.rm-pill{display:inline-block;font-size:10.5px;font-weight:650;line-height:18px;padding:0 7px;border-radius:6px;letter-spacing:.3px}',
+                '.rm-pill.ok{color:var(--rm-acc);background:var(--rm-accw)}.rm-pill.off{color:var(--rm-fnt);background:var(--rm-s2)}',
                 '.rm-chev{display:inline-flex;color:var(--rm-fnt)}',
-                '.rm-icon{width:24px;height:24px;border-radius:6px;background:var(--rm-s3);display:block;image-rendering:pixelated}',
-                '.rm-row-selected .n-data-table-td{background:rgba(91,140,255,.14)!important}',
+                '.rm-icon{width:24px;height:24px;border-radius:6px;background:var(--rm-s2);display:block;image-rendering:pixelated}',
+                '.rm-row-selected .n-data-table-td{background:rgba(242,179,61,.10)!important}',
                 // ---- 弹窗 ----
-                '.rm-modal{border-radius:16px!important}',
+                '.rm-modal{border-radius:18px!important}',
                 '.rm-mh{display:flex;align-items:center;gap:10px;min-width:0}',
-                '.rm-mh-img{width:32px;height:32px;border-radius:9px;background:#222936;image-rendering:pixelated;flex:none}',
-                '.rm-mh-ic{width:32px;height:32px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;color:#5b8cff;background:rgba(91,140,255,.14)}',
-                '.rm-mh-tx{display:flex;flex-direction:column;min-width:0;font-size:15px;font-weight:650;line-height:1.3}',
-                '.rm-mh-tx small{font-size:11px;font-weight:400;color:#7d8699}',
-                '.rm-dl{display:flex;flex-direction:column;gap:12px}',
-                '.rm-row{display:flex;gap:8px;align-items:center}',
-                '.rm-axis{flex:none;color:#7d8699;font-weight:600;font-size:12px}',
-                '.rm-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}',
-                '.rm-stats > div{background:#1a202b;border:1px solid #252c3a;border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}',
-                '.rm-stats small{font-size:11px;color:#7d8699}',
-                '.rm-stats b{font-size:14px;font-weight:650;font-variant-numeric:tabular-nums;color:#e9ecf3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-                '.rm-stats b.ok{color:#22c55e}',
-                '.rm-tile.wide{padding:12px}',
+                '.rm-mh-img{width:30px;height:30px;border-radius:8px;background:#232328;image-rendering:pixelated;flex:none}',
+                '.rm-mh-tx{display:flex;flex-direction:column;min-width:0;font-size:16px;font-weight:650;line-height:1.3}',
+                '.rm-mh-tx small{font-size:11px;font-weight:400;color:#8b8b94;letter-spacing:.3px}',
+                '.rm-dl{display:flex;flex-direction:column;gap:10px;color:#f4f4f5}',
+                '.rm-row{display:flex;gap:6px;align-items:center}',
+                '.rm-dl .rm-field{background:#232328;height:34px}',
+                '.rm-dl .rm-seg{background:#232328}',
+                '.rm-dl .n-input{--n-color:#232328!important;--n-border:none!important;--n-height:34px!important}',
+                '.rm-dl .rm-btn{height:34px}',
+                '.rm-dl .rm-btn:not(.acc):not(.neg){background:#2a2a30}',
+                '.rm-kvs{display:grid;grid-template-columns:1fr 1fr;gap:6px}',
+                '.rm-kv{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;background:#232328;border-radius:10px;padding:9px 12px}',
+                '.rm-kv span{flex:none;font-size:12px;color:#8b8b94}',
+                '.rm-kv b{font-size:14px;font-weight:650;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+                '.rm-kv b.acc{color:#f2b33d}',
                 // 只抬容器的 z-index（对抗游戏清零内联 z-index）；mask 绝不能一起抬——
                 // mask 与卡片同为 z:auto 靠 DOM 顺序分层，mask 被抬高后会反过来盖住卡片吃掉点击
                 '.n-modal-container,.n-dialog-container{z-index:100000!important}'
