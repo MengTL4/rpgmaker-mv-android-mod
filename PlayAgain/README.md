@@ -32,9 +32,9 @@
 
 ## 架构（混合方案：原生球 + WebView 面板）
 
-- **悬浮球**：`ModFloatingWindow` 挂在 MainActivity 的 DecorView 上（免 `SYSTEM_ALERT_WINDOW` 权限）。LGLTeam/SemiJni 风格**静态**球：深蓝渐变底 + 绿描边 + "MOD" 字样，圆形轮廓阴影，无动画。拖动在原生层（绝对坐标：`setTranslationX(nx - getLeft())`，注意与 margin 混用会漂移），位置存 SharedPreferences `rmmod_prefs`（ball_x/ball_y）
-- **面板**：游戏 WebView 内 `rmmod.js` 注入 Vue3 + Naive UI（darkTheme，本地 vendor），修改器 / 数据两个 tab，右上角悬浮。v8 起 vendor（约 1.7MB）**懒加载**：`index.html` 只挂 `rmmod.js`，首次点球开面板时才动态注入 vue/naive，不拖游戏启动
-- **桥**：`window.MOD = ModBridge`（`addJavascriptInterface`）。JS 每 300ms `takeCommand()` 拉原生命令（球点击 → `queue("menu")` → JS `__RMMOD_TOGGLE` 开面板）；`setBallVisible` 开面板时藏球；`log` → `Log.i("RMMOD")`
+- **悬浮球**：`ModFloatingWindow` 挂在 MainActivity 的 DecorView 上（免 `SYSTEM_ALERT_WINDOW` 权限）。**静态**球：与面板标识同色系的蓝紫渐变底 + 半透明白描边 + "MOD" 字样，圆形轮廓阴影，无动画。拖动在原生层（LayoutParams 固定左上角无 margin，位置完全用 translation 表示），松手吸附左/右边缘；位置存 SharedPreferences `rmmod_prefs`（ball_side/ball_y），屏幕尺寸变化（旋转/分屏）时按新尺寸重新摆放，始终在屏内。系统 ACTION_CANCEL 不视为点击
+- **面板**：游戏 WebView 内 `rmmod.js` 注入 Vue3 + Naive UI（darkTheme，本地 vendor），修改器 / 数据两个页签（头部分段控件），右侧贴边悬浮、上下撑满。样式全部集中在 mount() 的样式表里（`:root` 上 `--rm-*` 设计令牌 + `rm-*` 类），模板不再写内联样式。v8 起 vendor（约 1.7MB）**懒加载**：`index.html` 只挂 `rmmod.js`，首次点球开面板时才动态注入 vue/naive，不拖游戏启动
+- **桥**：`window.MOD = ModBridge`（`addJavascriptInterface`）。JS 每 150ms（面板打开/页面不可见时 600ms）`takeCommand()` 拉原生命令（球点击 → `queue("menu")` → JS `__RMMOD_TOGGLE` 开面板）；`setBallVisible` 开面板时藏球；`log` → `Log.i("RMMOD")`
 - **入口补丁**：`decode/smali_classes2/com/qihoo/rpgplugin/MainActivity.smali`
   - `createWebsite()` 第 260 行：`invoke-static {p0}, Lcom/rmmod/ModFloatingWindow;->show(Landroid/app/Activity;)V`
   - `onDestroy()` 第 958 行：`invoke-static {}, Lcom/rmmod/ModFloatingWindow;->hide()V`
@@ -42,12 +42,12 @@
 
 ## 功能清单
 
-- 作弊开关（分组折叠）：战斗（无敌/一击必杀/免技能消耗）、移动（穿墙/无遇敌/常时奔跑）、锁定（HP/HP上限/MP/TP）
-- 倍率滑条：经验/金钱/掉落 ×1~100，移速加成 0~10
-- 锁值步进：锁HP值/锁MP值（步进 100）、锁TP值（步进 10）
-- 快捷操作：全队回满/全灭敌人/逃离战斗/金币+99999/全物品×99/全武器/全防具/快速存档/读档/新游戏/转标题/淡入屏幕
-- 数据 tab：物品/武器/防具/角色/地图/开关/变量 分类 + 搜索 + naive-ui 虚拟滚动（1152 条目），图标解密渲染
-- 作弊状态持久化：localStorage `rmmod-cheats`（watchEffect 即时写回，启动恢复，仿 SemiJni）
+- 作弊开关（卡片式：图标 + 名称 + 一句话说明，点整张卡切换，开启为绿色态；组标题显示已开数量，一键全部关闭）：战斗（无敌/一击必杀/免技能消耗，均只作用于我方）、移动（穿墙/无遇敌/常时奔跑）、锁定（HP/满HP/MP/TP）
+- 倍率档位：经验/金钱 ×1/2/5/10/50/100、掉落 ×1/2/3/5/10，另可自定义 1~100（替代原 1~100 滑条：手机上一格约 2px 难以精确，且拖动依赖合成鼠标事件）；移速加成 默认/+0.5/+1/+1.5/+2/+3（更大会跳格）
+- 锁值步进：锁HP值/锁MP值（步进 100）、锁TP值（步进 10），不超过上限
+- 快捷操作（分组）：金币增加/设为任意值；战斗（全队回满/全灭敌人/逃离战斗，非战斗时禁用）；物资（全物品/武器/防具×99，物品不含重要/隐藏物品）；存档（存/读槽1、新游戏、回标题，覆盖与丢进度操作二次确认）；卡死修复（恢复画面/清除图片/中止事件/解除强制移动/返回地图）
+- 数据 tab：物品/武器/防具/角色/地图/开关/变量 分类 + 搜索 + 刷新 + naive-ui 虚拟滚动（1152 条目），图标解密渲染，表格高度随屏幕自适应；详情弹窗操作后不关闭、原地刷新（物品 +1/+10/+99/-1/清零，角色显示等级/HP/MP 且等级默认当前值）
+- 作弊状态持久化：localStorage `rmmod-cheats`（setState 防抖写回，启动恢复并做取值校验）；面板页签/数据分类/折叠状态存 `rmmod-ui`
 - 悬浮球位置持久化：`rmmod_prefs`（SharedPreferences）
   - 注意：`rmmod_prefs.xml` 里 `expmult:` 等带冒号旧键是**早期原生菜单版本的遗留孤儿数据**，现代码不读不写，无害
 
@@ -57,6 +57,18 @@
 2. **游戏在 document 捕获阶段对触摸 preventDefault**（`TouchInput`）→ MOD UI 的 touchstart/move/cancel 在捕获阶段 `stopPropagation`；touchend 再 `preventDefault`（防真实 click 落到刚打开的弹窗遮罩上瞬间关闭）。面板滑条靠兼容鼠标事件 → pointermove 合成 mousedown/mousemove/mouseup，并做**手势方向仲裁**（纵向滚动放弃鼠标合成，防误拖滑条，合成 click 带 `__rmShim` 标记 + 去重）
 3. **弹窗卡片钉死在左上角**：面板容器的 `transform: translateZ(0)` 使 modal 容器成为 fixed 后代的包含块 → MOD 容器一律不加 transform
 4. **球/按钮点不到（click 被杀）**：原生球不依赖 click（`onTouch` UP 直接 `queue("menu")`）；HTML 层按钮用 pointerup 重派发兜底
+5. **面板操作漏到游戏**（v9 修复）：合成的 mousedown 冒泡到 document 被 `TouchInput` 当成地图点击（人物朝面板背后走）→ 包装 `TouchInput._onLeftButtonDown/_onRelease` 忽略来自 MOD UI 的事件（不能截停冒泡：Naive 滑条依赖 window 上的事件委托）；游戏 `Input` 对 Backspace/方向键 preventDefault 且把 Q/W/X/Z 映射成游戏键 → body 冒泡阶段截停来自 MOD UI 的键盘事件
+
+## v9 功能修复（相对 v8，按原版 MV 语义校验）
+
+- **无遇敌效果相反**：旧版让 `makeEncounterCount` 返回 0，但该方法是给 `_encounterCount` 赋值而非返回值，计数器不再重置 → 几乎每步遇敌。改为 `canEncounter/executeEncounter` 返回 false
+- **无敌连敌人一起无敌**：`gainHp` 钩子不分敌我，开无敌后打不动敌人。改为只保护我方，并在 `makeDamageValue` 源头归零、挡掉即死状态
+- **免技能消耗敌我不分**：同上，只作用于我方；一击必杀不再秒混乱时被打的队友
+- **设等级按差值算**：`changeLevel(level)` 参数是目标等级，旧版传 `目标-当前`，设 50 级得到 49 级，再设一次变 1 级
+- **全灭敌人无效**：原版没有 `BattleManager._enemies`，改用 `$gameTroop.aliveMembers()`；战斗判定改用 `$gameParty.inBattle()`（`_phase` 战后不清空），并播放倒下效果
+- **数量"设为 0"变成 1**、**变量 `12abc` 被截成 12**、**非战斗时"全灭敌人"也提示成功**、**存档不调 `onBeforeSave`/读档不调 `onAfterLoad`**、**全物品发放空名占位条目** 等一并修复
+- **性能**：作弊钩子读原始配置对象（不走 Vue 响应式 Proxy）、直接生成包装函数透传 `arguments`（不再每次调用分配 arguments 对象），每帧对所有角色调用的移动/通行钩子开销降到约 1/60；触摸补丁只跟踪 MOD UI 上的按下，游戏画布上的拖动不再逐事件做 DOM 查询；状态栏无变化不触发整面板重渲染；图标裁剪复用同一画布
+- 页面重载时若面板开着，原生球会永久隐藏 → 启动即恢复球显示；`ModBridge` 日志队列无上限增长 → 限 200 条
 
 ## 性能（实测，作为"不换原生控件框架"的依据）
 

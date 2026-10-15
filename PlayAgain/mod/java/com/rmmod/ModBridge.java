@@ -10,9 +10,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * - Java 侧按钮 -> ModBridge.queue("cmd") 入队
  * - 游戏侧 mod.js 每 300ms 调 takeCommand() 拉取并执行
  * - mod.js 调 report(json) 回传状态，悬浮窗轮询 lastReport() 显示
+ * - mod.js 调 log(msg) 写 logcat（tag RMMOD）；同时缓存最近 LOG_CAP 条供 pollLog() 读取
  */
 public class ModBridge {
     private static final Queue<String> commands = new ConcurrentLinkedQueue<>();
+    /** 日志缓存上限：当前没有常驻的 pollLog 消费者，不设上限会随每条命令/日志无限增长 */
+    private static final int LOG_CAP = 200;
     private static final Queue<String> logs = new ConcurrentLinkedQueue<>();
     private static volatile String lastReport = "";
     private static volatile String lastResponse = "";
@@ -54,10 +57,14 @@ public class ModBridge {
             if (ctx == null) return "noctx";
             java.io.File dir = new java.io.File(ctx.getExternalFilesDir(null), "rmmod-capture");
             dir.mkdirs();
+            if (name == null || content == null) return "err:null";
             java.io.File f = new java.io.File(dir, name.replaceAll("[^a-zA-Z0-9._-]", "_"));
             java.io.FileOutputStream fos = new java.io.FileOutputStream(f);
-            fos.write(content.getBytes("UTF-8"));
-            fos.close();
+            try {
+                fos.write(content.getBytes("UTF-8"));
+            } finally {
+                fos.close();
+            }
             return f.getAbsolutePath();
         } catch (Throwable t) {
             return "err:" + t.getMessage();
@@ -79,6 +86,7 @@ public class ModBridge {
     public void log(String msg) {
         if (msg != null) {
             logs.add(msg);
+            while (logs.size() > LOG_CAP) logs.poll();
             android.util.Log.i("RMMOD", msg);
         }
     }
